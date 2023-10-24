@@ -137,7 +137,8 @@ def white_balance(model_dir='./models/Deep_White_Balance/PyTorch/models',input_d
 def load_model(model_path, device):
     logging.info(f"Loading model {model_path}")
     
-    if any(os.path.exists(path) for path in [model_path, 'net_awb.pth', 'net_t.pth', 'net_s.pth']):
+    # Choose models depends on which models we have
+    if any(filename in model_path for filename in ['net_awb.pth', 'net_t.pth', 'net_s.pth']):
         model = deep_wb_single_task.deepWBnet()
     elif os.path.exists(model_path):
         model = deep_wb_model.deepWBNet()
@@ -152,9 +153,6 @@ def load_all_models(model_dir, device):
     t_path = os.path.join(model_dir, 'net_t.pth')
     s_path = os.path.join(model_dir, 'net_s.pth')
     
-    #TODO: Revisar porque no entra en el primer if cuando las rutas estan bien 
-    print(awb_path,t_path,s_path)
-
     if os.path.exists(awb_path) and os.path.exists(t_path) and os.path.exists(s_path):
         net_awb = load_model(awb_path, device)
         net_t = load_model(t_path, device)
@@ -169,7 +167,11 @@ def load_all_models(model_dir, device):
 
 ####### MAIN #######
 if __name__ == '__main__':
-    model_dir = '.\\models'
+    # current_directory = os.getcwd()
+    # print("Directorio actual:", current_directory)
+
+    model_dir = 'C:\\Users\\JoelVP\\Desktop\\UPV\\ImageEnhancementTFG\\src\\models\\Deep_White_Balance\\PyTorch\\models'
+
     input_dir = '.\\images'
     out_dir = '.\\mid_images'
     task = 'all'  # Cambiar a 'editing' o 'awb' para probar otras tareas.
