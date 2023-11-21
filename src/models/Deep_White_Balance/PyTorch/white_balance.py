@@ -26,7 +26,6 @@ def white_balance(model_dir='./models/Deep_White_Balance/PyTorch/models',input_d
         os.mkdir(out_dir)
 
     if task.lower() == 'all':
-        print(model_dir)
         net_awb, net_t, net_s = load_all_models(model_dir, device)
         logging.info("Models loaded !")
         
@@ -94,6 +93,91 @@ def white_balance(model_dir='./models/Deep_White_Balance/PyTorch/models',input_d
         
     else:  #edit task
         edit_filter(imgfiles,task,device, net_s, net_t, S, tosave, show, target_color_temp, out_dir)
+        
+######### GUI Function #########
+
+def white_balance_gui(input_images, model_dir='./models/Deep_White_Balance/PyTorch/models',
+                  task='AWB',target_color_temp=None,mxsize=656,show=False, device='cuda'):
+    
+    S = mxsize
+
+    device = torch.device('cuda' if device.lower() == 'cuda' and torch.cuda.is_available() else 'cpu')
+    logging.info(f'Using device {device}')
+
+    if target_color_temp:
+        assert 2850 <= target_color_temp <= 7500, (
+                'Color temperature should be in the range [2850 - 7500], but the given one is %d' % target_color_temp)
+
+        if task.lower() != 'editing':
+            raise Exception('The task should be editing when a target color temperature is specified.')
+
+    if task.lower() == 'all':
+        net_awb, net_t, net_s = load_all_models(model_dir, device)
+        logging.info("Models loaded !")
+        
+    elif task.lower() == 'editing':
+        t_path = os.path.join(model_dir, 'net_t.pth')
+        s_path = os.path.join(model_dir, 'net_s.pth')
+
+        if os.path.exists(t_path) and os.path.exists(s_path):
+            net_t = load_model(t_path)
+            net_t.to(device=device)
+            net_t.load_state_dict(
+                torch.load(os.path.join(model_dir, 'net_t.pth'), map_location=device))
+            net_t.eval()
+            
+            net_s = load_model(s_path)
+            net_s.to(device=device)
+            net_s.load_state_dict(
+                torch.load(os.path.join(model_dir, 'net_s.pth'), map_location=device))
+            net_s.eval()
+            logging.info("Models loaded !")
+            
+        elif os.path.exists(os.path.join(model_dir, 'net.pth')):
+            net = load_model(os.path.join(model_dir, 'net.pth'))
+            logging.info(f'Using device {device}')
+            net.load_state_dict(torch.load(os.path.join(model_dir, 'net.pth')))
+            _, net_t, net_s = splitNetworks.splitNetworks(net)
+            net_t.to(device=device)
+            net_t.eval()
+            net_s.to(device=device)
+            net_s.eval()
+            
+        else:
+            raise Exception('Model not found!')
+        
+    elif task.lower() == 'awb':
+        awb_path = os.path.join(model_dir, 'net_awb.pth')
+        
+        if os.path.exists(awb_path):
+            net_awb = load_model(awb_path)
+            logging.info(f'Using device {device}')
+            net_awb.to(device=device)
+            net_awb.load_state_dict(torch.load(os.path.join(model_dir, 'net_awb.pth'),
+                                               map_location=device))
+            net_awb.eval()
+            
+        elif os.path.exists(os.path.join(model_dir, 'net.pth')):
+            net = load_model(os.path.join(model_dir, 'net.pth'))
+            logging.info(f'Using device {device}')
+            net.load_state_dict(torch.load(os.path.join(model_dir, 'net.pth')))
+            net_awb, _, _ = splitNetworks.splitNetworks(net)
+            net_awb.to(device=device)
+            net_awb.eval()
+        else:
+            raise Exception('Model not found!')
+    else:
+        raise Exception("Wrong task! Task should be: 'AWB', 'editing', or 'all'")
+    
+    
+    if task.lower() == 'all':  # awb and editing tasks
+        all_filter(input_images,task,device, net_awb, net_s, net_t, S, tosave, show, out_dir)
+        
+    elif task.lower() == 'awb':  # awb task
+        awb_filter(input_images,task,device, net_awb, S, tosave, show, out_dir)
+        
+    else:  #edit task
+        edit_filter(input_images,task,device, net_s, net_t, S, tosave, show, target_color_temp, out_dir)
                     
 ######### Aux functions #########
 
