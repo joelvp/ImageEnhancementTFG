@@ -1,6 +1,7 @@
 import argparse
 import logging
 from models.Deep_White_Balance.PyTorch.white_balance import white_balance
+from models.LLFlow.code.lowlight import lowlight
 
 
 def get_args():
@@ -22,6 +23,6 @@ if __name__ == "__main__":
     if wb:
         white_balance()
     if llight:
-        white_balance()
+        lowlight()
     else:
         raise Exception('No enhancement applied!')

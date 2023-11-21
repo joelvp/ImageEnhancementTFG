@@ -2,18 +2,12 @@ from models.LLFlow.code.test_unpaired import *
 
 def lowlight(conf_path="./models/LLFlow/code/confs/LOLv2-pc.yml",out_dir="../data/demo_images/output/"):
 
-    conf = conf_path.split('/')[-1].replace('.yml', '')
-
     model, opt = load_model(conf_path)
     # model.netG = model.netG.to("cpu")
     model.netG = model.netG.cuda()
 
     lr_dir = opt['dataroot_unpaired']
     lr_paths = fiFindByWildcard(os.path.join(lr_dir, '*.*'))
-
-    this_dir = os.path.dirname(os.path.realpath(__file__))
-    #test_dir = os.path.join(this_dir, '..', 'results', conf, args.name)
-    print(f"Out dir: {out_dir}")
 
     for lr_path, idx_test in tqdm.tqdm(zip(lr_paths, range(len(lr_paths)))):
 
@@ -30,7 +24,6 @@ def lowlight(conf_path="./models/LLFlow/code/confs/LOLv2-pc.yml",out_dir="../dat
         if opt.get("concat_histeq", False):
             his = t(his)
             lr_t = torch.cat([lr_t, his], dim=1)
-        heat = opt['heat']
         with torch.cuda.amp.autocast():
             # sr_t = model.get_sr(lq=lr_t, heat=None)
             sr_t = model.get_sr(lq=lr_t.cuda(), heat=None)

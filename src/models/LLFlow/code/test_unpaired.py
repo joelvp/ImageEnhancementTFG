@@ -26,7 +26,6 @@ def load_model(conf_path):
     opt = option.parse(conf_path, is_train=False)
     opt['gpu_ids'] = None
     opt = option.dict_to_nonedict(opt)
-    print(opt)
     model = create_model(opt)
 
     model_path = opt_get(opt, ['model_path'], None)
