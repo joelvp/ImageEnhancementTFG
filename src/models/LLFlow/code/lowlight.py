@@ -44,16 +44,14 @@ def load_ll_model(conf_path="./models/LLFlow/code/confs/LOLv2-pc.yml"):
          
 def lowlight_gui(input_image, model, opt):
     
-    # Convertir la imagen de Pillow a una matriz NumPy
-    image = np.array(input_image)
     # If the image is in floating-point format, scale it to the range [0, 255]
-    if image.dtype == np.float32 or image.dtype == np.float64:
-        image = (image * 255).astype(np.uint8)
+    # if input_image.dtype == np.float32 or input_image.dtype == np.float64:
+    #     input_image = (input_image * 255).astype(np.uint8)
 
-    raw_shape = image.shape
-    image, padding_params = auto_padding(image)
-    his = hiseq_color_cv2_img(image)
-    lr_t = t(image)
+    raw_shape = input_image.shape
+    input_image, padding_params = auto_padding(input_image)
+    his = hiseq_color_cv2_img(input_image)
+    lr_t = t(input_image)
     if opt["datasets"]["train"].get("log_low", False):
         lr_t = torch.log(torch.clamp(lr_t + 1e-3, min=1e-3))
     if opt.get("concat_histeq", False):
@@ -66,7 +64,7 @@ def lowlight_gui(input_image, model, opt):
                 padding_params[2]:sr_t.shape[3] - padding_params[3]])
     assert raw_shape == sr.shape
     
-    return Image.fromarray(sr.astype('uint8')) # Return Pillow image
+    return sr
 
     
     

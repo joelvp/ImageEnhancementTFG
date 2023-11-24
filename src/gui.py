@@ -1,11 +1,20 @@
 import gradio as gr
 import numpy as np
-from PIL import Image
+import logging
+import cv2
+
 from models.Deep_White_Balance.PyTorch.white_balance import load_wb_model, white_balance_gui
 from models.LLFlow.code.lowlight import load_ll_model, lowlight_gui
-import logging
+from models.NAFNet.denoise import load_denoising_model, denoising_gui
+
 
 logging.basicConfig(level=logging.INFO)
+
+
+def imread(img_path):
+  img = cv2.imread(img_path)
+  img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+  return img
 
 def sepia(input_image):
     
@@ -29,20 +38,12 @@ def apply_transformations(input_images, options):
     # Flags for load models only one time
     wb_flag = False
     ll_flag = False
+    denoise_flag = False
     
     for image in input_images:
         
-        # TODO: Pensar que es mejor ya que WB usa Pillow y LowLight Numpy
-        image = Image.open(image) # WB uses Pillow, LowLight uses numpy
-
-        if "White Balance" in options:
-            if not wb_flag:
-                logging.info('Loading AWB model')
-                net_awb = load_wb_model()
-                wb_flag = True
-                
-            logging.info("Applying White Balance")
-            image = white_balance_gui(image, net_awb)
+        # Numpy array
+        image = imread(image) 
 
         if "Low Light" in options:
             if not ll_flag:
@@ -52,8 +53,26 @@ def apply_transformations(input_images, options):
                 
             logging.info("Applying Low Light")
             image = lowlight_gui(image, model, opt)
+        
+        if "Denoise" in options:
+            if not denoise_flag:
+                logging.info("Loading Denoising model")
+                model = load_denoising_model()
+                ll_flag = True
+                
+            logging.info("Applying Denoising")
+            image = denoising_gui(image, model)
+            
+        if "White Balance" in options:
+            if not wb_flag:
+                logging.info('Loading AWB model')
+                net_awb = load_wb_model()
+                wb_flag = True
+                
+            logging.info("Applying White Balance")
+            image = white_balance_gui(image, net_awb)
 
-        if "Blur" in options:
+        if "Deblur" in options:
             logging.info("Applying Blur")
 
         if "Sepia" in options:
@@ -83,7 +102,7 @@ with gr.Blocks() as demo:
     
     input_images.change(update_images, [input_images], input_gallery)
 
-    options = gr.CheckboxGroup(["White Balance", "Low Light", "Blur", "Sepia"], label="Options", info="Enhance the image")
+    options = gr.CheckboxGroup(["Low Light","Denoise","White Balance", "Blur", "Sepia"], label="Options", info="Enhance the image")
     
     btn_submit = gr.Button("Submit", scale=0)
     

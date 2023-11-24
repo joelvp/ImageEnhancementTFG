@@ -10,11 +10,15 @@ __credits__ = ["Mahmoud Afifi"]
 import numpy as np
 import torch
 from torchvision import transforms
+from PIL import Image
 # import utilities.utils as utls
 from . import utils as utls
 
 
 def deep_wb(image, task='all', net_awb=None, net_t=None, net_s=None, device='cpu', s=656):
+    if isinstance(image, np.ndarray):
+        # Convertir numpy array a PIL Image
+        image = Image.fromarray(np.uint8(image))
     # check image size
     image_resized = image.resize((round(image.width / max(image.size) * s), round(image.height / max(image.size) * s)))
     w, h = image_resized.size
