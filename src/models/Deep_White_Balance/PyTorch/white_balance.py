@@ -2,6 +2,7 @@ import os
 import logging
 from PIL import Image
 import torch
+import numpy as np
 
 from .arch import deep_wb_model, deep_wb_single_task, splitNetworks
 from .utilities import utils
@@ -126,7 +127,7 @@ def white_balance_gui(input_image, net_awb, task='AWB',mxsize=656, device='cuda'
         
     out_awb = deep_wb(input_image, task=task.lower(), net_awb=net_awb, device=device, s=mxsize)
             
-    return out_awb
+    return (out_awb * 255).astype(np.uint8)
         
                     
 ######### Aux functions #########
