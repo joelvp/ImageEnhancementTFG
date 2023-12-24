@@ -2,10 +2,12 @@ import gradio as gr
 import numpy as np
 import logging
 import cv2
+import os
 
 from models.Deep_White_Balance.PyTorch.white_balance import load_wb_model, white_balance_gui
 from models.LLFlow.code.lowlight import load_ll_model, lowlight_gui
 from models.NAFNet.denoise import load_denoising_model, denoising_gui
+from models.SkyAR.sky_replace import load_sky_model, sky_replace_gui
 
 logging.basicConfig(level=logging.INFO)
 
@@ -66,11 +68,17 @@ def apply_transformations(input_images, options, sky_image=None):
             logging.info("Applying White Balance")
             image = white_balance_gui(image, net_awb)
             
-        if "Sky" in options:
-            logging.info("Applying Sky Replacement")
-
-            if sky_image == None:
+        if "Sky" in options: 
+            if sky_image is None:
                 raise gr.Error("Sky image needed!")
+            
+            if not sky_flag:
+                logging.info('Loading Sky Replacement model')
+                model, config = load_sky_model()
+                sky_flag = True
+                
+            logging.info("Applying Sky Replacement")
+            image = sky_replace_gui(image, sky_image, model, config)
             
         if "Deblur" in options:
             logging.info("Applying Blur")
@@ -91,6 +99,7 @@ def switch(options: list):
     """ Sky image input visibility""" 
     if "Sky" in options:
         return gr.Image(visible=True)
+        
     else:
         return gr.Image(visible=False)
 
@@ -113,7 +122,14 @@ with gr.Blocks() as demo:
                                label="Options", info="Enhance the image")
 
     # Sky image input (initially hidden)
-    sky_image_input = gr.Image(elem_id="sky_image_input", label="Sky Image", visible=False)
+    sky_image_input = gr.Image(
+    "../data/demo_images/skybox/galaxy.jpg",
+    elem_id="sky_image_input",
+    label="Sky Image",
+    visible=False,
+    height=500,  # Establece la altura máxima de la imagen
+    width=10000    # Establece la anchura máxima de la imagen
+    )
     
     # Sky image input depends on Sky CheckBox
     options.change(switch, options, sky_image_input)
@@ -134,3 +150,11 @@ with gr.Blocks() as demo:
 
 if __name__ == "__main__":
     demo.launch()
+    
+    
+##### HOW TO RUN #####
+    """
+    cd src
+    python .\enhancement.py --denoise --  
+    
+    """
