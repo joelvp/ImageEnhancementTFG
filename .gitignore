@@ -1,3 +1,4 @@
 **/__pycache__/
-/data/demo_images/output/
-/data/demo_images/wait/
+/data/
+*.pt
+*.pth
