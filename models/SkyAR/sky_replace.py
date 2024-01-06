@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 import os
-import argparse
 import logging
 from models.SkyAR.networks import * # Cambiar en utils.py el import de la linea 4 por -> from skimage.metrics import structural_similarity as sk_cpt_ssim
 from models.SkyAR.skyboxengine import *

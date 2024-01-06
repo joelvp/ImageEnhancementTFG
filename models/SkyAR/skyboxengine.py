@@ -1,7 +1,6 @@
 import logging
 from models.SkyAR.skybox_utils import *
 from cv2.ximgproc import guidedFilter
-import os
 
 class SkyBox():
 

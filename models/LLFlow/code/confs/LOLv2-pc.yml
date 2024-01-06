@@ -61,7 +61,7 @@ datasets:
 dataroot_unpaired: C:\Users\JoelVP\Desktop\UPV\ImageEnhancementTFG\data\demo_images\input
 dataroot_GT: D:\LOLdataset\eval15\high
 dataroot_LR: D:\LOLdataset\eval15\low
-model_path: C:\Users\JoelVP\Desktop\UPV\ImageEnhancementTFG\src\models\LLFlow\code\models\pretrained\LOLv2.pth
+model_path: C:\Users\JoelVP\Desktop\UPV\ImageEnhancementTFG\models\LLFlow\code\models\pretrained\LOLv2.pth
 heat: 0 # This is the standard deviation of the latent vectors
 
 #### network structures

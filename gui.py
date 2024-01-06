@@ -107,7 +107,7 @@ with gr.Blocks() as demo:
 
     # Sky image input (initially hidden)
     sky_image_input = gr.Image(
-    "../data/demo_images/skybox/galaxy.jpg",
+    "data/demo_images/skybox/galaxy.jpg",
     elem_id="sky_image_input",
     label="Sky Image",
     visible=False,
