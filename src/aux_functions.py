@@ -4,6 +4,8 @@ import logging
 import gradio as gr
 import numpy as np
 
+from models.NAFNet.deblur import deblurring_gui
+
 from .model_manager import ModelManager
 
 from models.Deep_White_Balance.PyTorch.white_balance import white_balance_gui
@@ -38,6 +40,14 @@ def apply_transformations(input_images, options, model_manager:ModelManager, sky
 
                 logging.info("Applying Denoising")
                 image = denoising_gui(image, model_manager.denoise_model)
+                
+            elif option == "Deblur":
+                if model_manager.deblur_model is None:
+                    model_manager.load_deblur_model()
+
+                logging.info("Applying Deblurring")
+                image = deblurring_gui(image, model_manager.deblur_model)
+
 
             elif option == "White Balance":
                 if model_manager.wb_model is None:
