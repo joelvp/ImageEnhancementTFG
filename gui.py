@@ -44,7 +44,7 @@ if __name__ == "__main__":
         input_images.change(update_images, [input_images], input_gallery)
 
         options = gr.Dropdown(
-                ["Low Light", "Denoise", "White Balance", "Sky"], value=["White Balance"], multiselect=True,
+                ["Low Light", "Denoise", "Deblur", "White Balance", "Sky"], value=["White Balance"], multiselect=True,
                 label="Choose the filters according to the order in which you want to apply them. "
             )
 
