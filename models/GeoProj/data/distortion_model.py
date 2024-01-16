@@ -1,13 +1,13 @@
 import math
 import numpy as np
 
-def distortionParameter(types):
+def distortionParameter(types, img_width_dataset, img_height_dataset):
     parameters = []
     
     if (types == 'barrel'):
-        Lambda = np.random.random_sample( )* -5e-5/4
-        x0 = 256
-        y0 = 256
+        Lambda = np.random.random_sample( )* -2e-5/4 # Originalmente -5e-5/4
+        x0 = img_width_dataset # Centro de distorsión
+        y0 = img_height_dataset
         parameters.append(Lambda)
         parameters.append(x0)
         parameters.append(y0)
