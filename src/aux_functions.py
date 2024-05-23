@@ -3,6 +3,7 @@ import cv2
 import logging
 import gradio as gr
 import numpy as np
+import base64
 
 from models.NAFNet.deblur import deblurring_gui
 
@@ -19,6 +20,25 @@ def imread(img_path):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     return img
 
+
+# Image to Base 64 Converter
+def image_to_base64(image_path):
+    with open(image_path, 'rb') as img:
+        encoded_string = base64.b64encode(img.read())
+    return encoded_string.decode('utf-8')
+
+  
+# Function that takes User Inputs and displays it on ChatUI
+def query_message(history,txt,img):
+    if not img:
+        history += [(txt,None)]
+        return history
+    base64_img = image_to_base64(img)
+    data_url = f"data:image/jpeg;base64,{base64_img}"
+    history += [(f"{txt} ![]({data_url})", None)]
+    return history
+
+  
 def apply_transformations(input_images, options, model_manager:ModelManager, sky_image=None) -> List[np.ndarray]:
     enhanced_images = []
 
