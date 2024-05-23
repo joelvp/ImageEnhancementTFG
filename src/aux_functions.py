@@ -27,6 +27,7 @@ def image_to_base64(image_path):
         encoded_string = base64.b64encode(img.read())
     return encoded_string.decode('utf-8')
 
+  
 # Function that takes User Inputs and displays it on ChatUI
 def query_message(history,txt,img):
     if not img:
@@ -37,6 +38,7 @@ def query_message(history,txt,img):
     history += [(f"{txt} ![]({data_url})", None)]
     return history
 
+  
 def apply_transformations(input_images, options, model_manager:ModelManager, sky_image=None) -> List[np.ndarray]:
     enhanced_images = []
 

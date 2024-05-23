@@ -2,6 +2,7 @@ import gradio as gr
 import logging
 from src.aux_functions import apply_transformations, image_to_base64, query_message
 
+
 from src.model_manager import ModelManager
 
 logging.basicConfig(level=logging.INFO)
@@ -23,7 +24,7 @@ def apply_transformations_event(input_images, options, sky_image_input):
     enhanced_images = apply_transformations(input_images, options, model_manager, sky_image_input)
     return enhanced_images
 
-
+  
 def llm_response(history,text,img):
     if not img:
         # response = txt_model.generate_content(text)
@@ -39,6 +40,7 @@ def llm_response(history,text,img):
         data_url = f"data:image/jpeg;base64,{base64_img}"
         history += [(f"Imagen mejorada! ![]({data_url})", None)]
         return history
+
 
 if __name__ == "__main__":
     
@@ -114,4 +116,5 @@ if __name__ == "__main__":
                                 [chatbot,text_box,image_box],
                                 chatbot
                                 )
+
     demo.launch()
