@@ -1,5 +1,4 @@
 import gradio as gr
-import os
 import time
 
 from models.Llama.llama import Llama
@@ -31,10 +30,13 @@ def apply_transformations_event(input_images, options, sky_image_input):
 
 
 def add_message(history, message):
-    for x in message["files"]:
-        history.append(((x,), None))
-    if message["text"] != '':
-        history.append((message["text"], None))
+    if not message["files"] and message["text"] == '':
+        history.append((None, None))  # Añadir marcador cuando no hay input
+    else:
+        for x in message["files"]:
+            history.append(((x,), None))
+        if message["text"] != '':
+            history.append((message["text"], None))
     return history, gr.MultimodalTextbox(value=None, interactive=False, placeholder="Wait to LLM response...", show_label=False)
 
 
@@ -46,29 +48,48 @@ def add_response(history, response):
         yield history
 
 
-def select_input_images(history):
+def select_input_images_and_text(history):
     input_images = []
+    input_text = None
     for item in reversed(history):
-        print("Item", item)
-        if isinstance(item[0], tuple):
-            input_images.append(item[0][0])
-        # elif isinstance(item[0], str) and isinstance(item[1], str): # Si esta esto puesto solo coge imagenes hasta el ultimo [input_text, output_text]
-        #     return input_images
+        # print("ITEM", item)
+        if isinstance(item[0], str):
+            # Si encontramos texto, verificamos si hay imágenes antes de él
+            images_found = False
+            for next_item in reversed(history[:history.index(item)]):
+                if isinstance(next_item[0], tuple):
+                    # Agregamos todas las imagenes que preceden al texto
+                    input_images.append(next_item[0][0])
+                    images_found = True
+                elif isinstance(next_item[0], str) and images_found:
+                    # Si encontramos texto después de las imagenes cortamos
+                    break
 
-    return input_images
+            if images_found:
+                # Si habia imagenes y texto, asignamos texto y vamos al return
+                input_text = item[0]
+                break
+            else:
+                # Si no hay imagenes, asignamos solo texto y vamos al return
+                input_text = item[0]
+                input_images = []
+                break
+        elif isinstance(item[0], tuple):
+            # Si la primera entrada es una imagen, agregamos esa imagen y vamos al return
+            input_images.append(item[0][0])
+            input_text = None
+            break
+        elif item[0] is None and item[1] is None:
+            break
+
+    return input_images, input_text
 
 
 def llm_bot(history):
 
     print("History", history)
 
-    input_text = None
-    for item in reversed(history):
-        if isinstance(item[0], str):
-            input_text = item[0]
-            break
-
-    input_images = select_input_images(history)
+    input_images, input_text = select_input_images_and_text(history)
 
     if not input_images and input_text:
         print('Only text')
@@ -92,6 +113,10 @@ def llm_bot(history):
                     yield updated_history
                 sky = google_image_search(tasks)
                 enhanced_images = apply_transformations(input_images, ['Sky'], model_manager, sky_image=sky)
+            elif 'No Tasks' in tasks:
+                enhanced_images = []
+                for updated_history in add_response(history, tasks[-1]):
+                    yield updated_history
             else:
                 response = "La imagen se va a mejorar con " + str(tasks)
                 for updated_history in add_response(history, response):
@@ -109,10 +134,7 @@ def llm_bot(history):
                 yield updated_history
 
     else:
-
-        response = llama_model.generate(None, False)
-        history += [[None, None]]
-        for updated_history in add_response(history, response):
+        for updated_history in add_response(history, "Introduce una imagen y como deseas mejorarla, asi te podré mostrar todas mis habilidades."):
             yield updated_history
 
 

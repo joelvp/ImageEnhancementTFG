@@ -1,6 +1,7 @@
 import os
 import tempfile
 from io import BytesIO
+import random
 from typing import List
 import cv2
 import logging
@@ -134,7 +135,7 @@ def google_image_search(query: str):
     CX = '46ef2a835eabd4047'
     search_params = {
         'q': query,
-        'num': 1,
+        'num': 5,  # Buscar 5 imágenes en lugar de 1
         'fileType': 'jpg|png',
         'safe': 'off',
         'imgType': 'photo',
@@ -144,22 +145,25 @@ def google_image_search(query: str):
     gis = GoogleImagesSearch(API_KEY, CX)
     # Crear un directorio temporal
     with tempfile.TemporaryDirectory() as temp_dir:
-        # Realiza una búsqueda de imágenes con la palabra clave "cielo"
+        # Realiza una búsqueda de imágenes con la palabra clave
         gis.search(search_params=search_params, path_to_dir=temp_dir)
 
-        # Obtener el nombre del archivo guardado en el directorio temporal
-        downloaded_image_path = None
+        # Obtener las rutas de las imágenes guardadas en el directorio temporal
+        downloaded_image_paths = []
         if gis.results():
-            image_result = gis.results()[0]
-            filename = os.path.basename(image_result.path)
-            downloaded_image_path = os.path.join(temp_dir, filename)
+            for image_result in gis.results():
+                filename = os.path.basename(image_result.path)
+                downloaded_image_path = os.path.join(temp_dir, filename)
+                downloaded_image_paths.append(downloaded_image_path)
 
-        print(downloaded_image_path)
+        if downloaded_image_paths:
+            # Seleccionar una imagen aleatoria de las descargadas
+            selected_image_path = random.choice(downloaded_image_paths)
+            print(f'Selected image: {selected_image_path}')
 
-        # Leer la imagen usando imread
-        if downloaded_image_path:
-            image = imread(downloaded_image_path)
+            # Leer la imagen usando imread
+            image = imread(selected_image_path)
             return image
         else:
-            print("No se pudo descargar la imagen.")
+            print("No se pudo descargar ninguna imagen.")
             return None

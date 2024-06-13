@@ -18,6 +18,7 @@ class Llama:
         print("IMAGE", image, "MESSAGE", message)
         if image and message:
             prompt = self.get_prompt(self.prompts, 'task_chooser')
+            message = "Extraiga la informacion deseada de la siguiente frase:\n\n" + message
             api_json = self.add_message_to_dict(prompt, message)
             try:
                 response = self.try_run(api_json).json()
@@ -27,16 +28,16 @@ class Llama:
 
                 if isinstance(response_dict, str):
                     response_dict = json.loads(response_dict)
-                if isinstance(response_dict['enhance_required'], str):
-                    response_dict['enhance_required'] = response_dict['enhance_required'].lower() == 'true'
-                if isinstance(response_dict['sky_replacement'], str):
-                    response_dict['sky_replacement'] = response_dict['sky_replacement'].lower() == 'true'
-                if response_dict['enhance_required'] and not response_dict['sky_replacement']:
-                    return response_dict['tasks']
-                elif response_dict['enhance_required'] and response_dict['sky_replacement']:
-                    return ["Sky", response_dict['sky_background']]
-                else:
-                    return []
+                if isinstance(response_dict['mejora_imagen'], str):
+                    response_dict['mejora_imagen'] = response_dict['mejora_imagen'].lower() == 'true'
+                if isinstance(response_dict['cambio_cielo'], str):
+                    response_dict['cambio_cielo'] = response_dict['cambio_cielo'].lower() == 'true'
+                if response_dict['mejora_imagen'] and not response_dict['cambio_cielo']:
+                    return response_dict['tareas']
+                elif response_dict['cambio_cielo']:
+                    return ["Sky", response_dict['new_background_image']]
+                else:# Añadir llamada a LLM para que entienda si esta dando las gracias porque ya esta bien y le recordamos que envie otra imgane, si es pregunta general que conteste com plain text
+                    return self.response_to_no_tasks(message)
             except RetryError as e:
                 print(f"An error occurred after retries: {e}")
                 return "Estoy teniendo fallos internos, dame otra oportunidad..."
@@ -81,4 +82,20 @@ class Llama:
         print("Llama API call...")
         response = self.llama.run(api_json)
         return response
+
+    def response_to_no_tasks(self, message):
+        print("Trying no tasks")
+        prompt = self.get_prompt(self.prompts, 'no_tasks')
+        api_json = self.add_message_to_dict(prompt, message)
+        try:
+            response_jon = self.try_run(api_json).json()
+            response = response_jon['choices'][0]['message']['content']
+            return ["No Tasks", response]
+        except RetryError as e:
+            print(f"An error occurred after retries: {e}")
+            return "Estoy teniendo fallos internos, dame otra oportunidad..."
+        except Exception as e:
+            print(f"An unexpected error occurred: {e}")
+            return "Estoy teniendo fallos internos, dame otra oportunidad..."
+
 
