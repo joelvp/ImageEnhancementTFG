@@ -27,7 +27,7 @@ class BasicDataset(Dataset):
         if fold is not 0:
             tfolds = list(set([1, 2, 3]) - set([fold]))
             logging.info(f'Training process will use {max_trdata} training images randomly selected from folds {tfolds}')
-            files = loadmat(join('..', 'folds', 'fold%d_.mat' % fold))
+            files = loadmat(join('../PyTorch', 'folds', 'fold%d_.mat' % fold))
             files = files['training']
             self.imgfiles = []
             logging.info('Loading training images information...')

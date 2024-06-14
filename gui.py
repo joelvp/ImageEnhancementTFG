@@ -3,7 +3,7 @@ import time
 
 from models.Llama.llama import Llama
 from src.aux_functions import apply_transformations, images_to_temp_paths, google_image_search
-from src.model_manager import ModelManager
+from src.objects.model_manager import ModelManager
 import logging
 
 

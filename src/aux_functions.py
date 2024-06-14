@@ -13,12 +13,11 @@ from PIL import Image
 
 from models.NAFNet.deblur import deblurring_gui
 
-from .model_manager import ModelManager
+from src.objects.model_manager import ModelManager
 from google_images_search import GoogleImagesSearch
-from models.Deep_White_Balance.PyTorch.white_balance import white_balance_gui
-from models.LLFlow.code.lowlight import  lowlight_gui
-from models.NAFNet.denoise import  denoising_gui
-from models.SkyAR.sky_replace import  sky_replace_gui
+from models.LLFlow.code.lowlight import lowlight_gui
+from models.NAFNet.denoise import denoising_gui
+from models.SkyAR.sky_replace import sky_replace_gui
 
 
 def imread(img_path):
@@ -93,13 +92,12 @@ def apply_transformations(input_images, options, model_manager: ModelManager, sk
                 logging.info("Applying Deblurring")
                 image = deblurring_gui(image, model_manager.deblur_model)
 
-
             elif option == "White Balance":
                 if model_manager.wb_model is None:
                     model_manager.load_wb_model()
 
                 logging.info("Applying White Balance")
-                image = white_balance_gui(image, model_manager.wb_model)
+                image = model_manager.wb_model.process_image(image)
 
             elif option == "Sky":
                 if sky_image is None:
@@ -113,7 +111,7 @@ def apply_transformations(input_images, options, model_manager: ModelManager, sk
 
         enhanced_images.append(image)
         
-    logging.info("Filters correctly apllied!")
+    logging.info("Images enhanced correctly!")
 
     return enhanced_images
 

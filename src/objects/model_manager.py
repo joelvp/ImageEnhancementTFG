@@ -1,7 +1,6 @@
 import logging
-import time
 import gradio as gr
-from models.Deep_White_Balance.PyTorch.white_balance import load_wb_model
+from models.White_Balance.white_balance import WhiteBalance
 from models.LLFlow.code.lowlight import load_ll_model
 from models.NAFNet.deblur import load_deblurring_model
 from models.NAFNet.denoise import load_denoising_model
@@ -29,8 +28,9 @@ class ModelManager:
         self.deblur_model = load_deblurring_model()
 
     def load_wb_model(self):
-        logging.info('Loading AWB model')
-        self.wb_model = load_wb_model()
+        logging.info('Loading White Balance model')
+        self.wb_model = WhiteBalance()
+        self.wb_model.load_model()
 
     def load_sky_model(self):
         logging.info('Loading Sky Replacement model')

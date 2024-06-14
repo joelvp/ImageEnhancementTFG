@@ -12,7 +12,7 @@ import torch
 from torchvision import transforms
 from PIL import Image
 # import utilities.utils as utls
-from . import utils as utls
+from models.White_Balance.utilities import utils as utls
 
 
 def deep_wb(image, task='all', net_awb=None, net_t=None, net_s=None, device='cpu', s=656):
