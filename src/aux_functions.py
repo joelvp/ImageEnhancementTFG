@@ -16,7 +16,6 @@ from models.NAFNet.deblur import deblurring_gui
 from src.objects.model_manager import ModelManager
 from google_images_search import GoogleImagesSearch
 from models.LLFlow.code.lowlight import lowlight_gui
-from models.NAFNet.denoise import denoising_gui
 from models.SkyAR.sky_replace import sky_replace_gui
 
 
@@ -83,7 +82,7 @@ def apply_transformations(input_images, options, model_manager: ModelManager, sk
                     model_manager.load_denoise_model()
 
                 logging.info("Applying Denoising")
-                image = denoising_gui(image, model_manager.denoise_model)
+                image = model_manager.denoise_model.process_image(image)
                 
             elif option == "Deblur":
                 if model_manager.deblur_model is None:

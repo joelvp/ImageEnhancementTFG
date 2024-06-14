@@ -8,7 +8,7 @@ from models.White_Balance.utilities.deepWB import deep_wb
 
 class WhiteBalance(Model):
     def __init__(self, model_path='./models/White_Balance/models', device='cuda'):
-        super().__init__(model_path, device)
+        super().__init__(model_path=model_path, device=device, config_path=None)
 
     def load_model(self):
         # Load only AWB model

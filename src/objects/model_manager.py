@@ -3,7 +3,7 @@ import gradio as gr
 from models.White_Balance.white_balance import WhiteBalance
 from models.LLFlow.code.lowlight import load_ll_model
 from models.NAFNet.deblur import load_deblurring_model
-from models.NAFNet.denoise import load_denoising_model
+from models.NAFNet.denoise import Denoise
 from models.SkyAR.sky_replace import load_sky_model
 
 
@@ -21,7 +21,8 @@ class ModelManager:
         
     def load_denoise_model(self):
         logging.info("Loading Denoising model")
-        self.denoise_model = load_denoising_model()
+        self.denoise_model = Denoise()
+        self.denoise_model.load_model()
         
     def load_deblur_model(self):
         logging.info("Loading Deblurring model")
