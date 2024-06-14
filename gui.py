@@ -12,6 +12,20 @@ import logging
 def update_images(input_images): return input_images
 
 
+# Definir una función para cargar todos los modelos
+def load_all_models():
+    model_manager.load_all_models()
+    return gr.Button(value="Modelos cargados!", interactive=False, visible=True, variant="secondary"), gr.Textbox(visible=False)
+
+
+def waiting_loading_models():
+    return gr.Button("Cargando modelos...", interactive=False)
+
+
+def show_progress_box():
+    return gr.Textbox(value="Waiting", visible=True)
+
+
 def switch(options: list):
     """ Sky image input visibility"""
     if "Sky" in options:
@@ -144,6 +158,15 @@ if __name__ == "__main__":
     llama_model = Llama()
 
     with gr.Blocks() as demo:
+        # Crear el botón con su estado inicial
+        toggle_btn = gr.Button("Cargar modelos", variant="primary", interactive=True)
+        progress_text_box = gr.Textbox(visible=False)
+
+        # Asocia las funciones al evento de clic del botón
+        toggle_btn.click(waiting_loading_models, outputs=toggle_btn, queue=False)
+        toggle_btn.click(show_progress_box, outputs=progress_text_box, queue=False)
+        toggle_btn.click(load_all_models, outputs=[toggle_btn, progress_text_box])
+
         with gr.Tab("Manual Editor"):
             input_images = gr.File(type="filepath", label="Input Images", file_count="multiple", file_types=["image"],
                                    interactive=True)
