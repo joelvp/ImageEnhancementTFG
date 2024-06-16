@@ -13,7 +13,6 @@ from PIL import Image
 
 from src.objects.model_manager import ModelManager
 from google_images_search import GoogleImagesSearch
-from models.LLFlow.code.lowlight import lowlight_gui
 from models.SkyAR.sky_replace import sky_replace_gui
 
 
@@ -73,7 +72,7 @@ def apply_transformations(input_images, options, model_manager: ModelManager, sk
                     model_manager.load_ll_model()
 
                 logging.info("Applying Low Light")
-                image = lowlight_gui(image, model_manager.ll_model, model_manager.opt_ll)
+                image = model_manager.ll_model.process_image(image)
 
             elif option == "Denoise":
                 if model_manager.denoise_model is None:

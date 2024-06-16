@@ -18,7 +18,7 @@ def fiFindByWildcard(wildcard):
     return natsort.natsorted(glob.glob(wildcard, recursive=True))
 
 
-def load_model(conf_path):
+def load_LLFlow_model(conf_path):
     opt = option.parse(conf_path, is_train=False)
     opt['gpu_ids'] = None
     opt = option.dict_to_nonedict(opt)

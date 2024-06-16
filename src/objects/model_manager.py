@@ -1,7 +1,7 @@
 import logging
 import gradio as gr
 from models.White_Balance.white_balance import WhiteBalance
-from models.LLFlow.code.lowlight import load_ll_model
+from models.LLFlow.code.lowlight import LowLight
 from models.NAFNet.denoise import Denoise
 from models.NAFNet.deblur import Deblur
 from models.SkyAR.sky_replace import load_sky_model
@@ -17,7 +17,8 @@ class ModelManager:
         
     def load_ll_model(self):
         logging.info("Loading Low Light model")
-        self.ll_model, self.opt_ll = load_ll_model()
+        self.ll_model = LowLight()
+        self.ll_model.load_model()
         
     def load_denoise_model(self):
         logging.info("Loading Denoising model")

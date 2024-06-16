@@ -45,7 +45,7 @@ def create_model(opt, step=0, **opt_kwargs):
 
     model = opt['model']
 
-    print(model)
+    # print(model)
 
     M = find_model_using_name(model)
 
