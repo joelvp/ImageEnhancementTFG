@@ -11,8 +11,6 @@ import base64
 
 from PIL import Image
 
-from models.NAFNet.deblur import deblurring_gui
-
 from src.objects.model_manager import ModelManager
 from google_images_search import GoogleImagesSearch
 from models.LLFlow.code.lowlight import lowlight_gui
@@ -89,7 +87,7 @@ def apply_transformations(input_images, options, model_manager: ModelManager, sk
                     model_manager.load_deblur_model()
 
                 logging.info("Applying Deblurring")
-                image = deblurring_gui(image, model_manager.deblur_model)
+                image = model_manager.deblur_model.process_image(image)
 
             elif option == "White Balance":
                 if model_manager.wb_model is None:
