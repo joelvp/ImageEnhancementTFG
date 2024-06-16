@@ -1,6 +1,3 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import cv2
 import os
 import logging
 from models.SkyAR.networks import * # Cambiar en utils.py el import de la linea 4 por -> from skimage.metrics import structural_similarity as sk_cpt_ssim
@@ -8,35 +5,41 @@ from models.SkyAR.skyboxengine import *
 import models.SkyAR.utils as utils
 import torch
 
-# Decide which device we want to run on
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+from src.objects.model import Model
 
-class SkyFilter():
 
-    def __init__(self, config):
-
-        self.ckptdir = config.ckptdir
-
-        self.in_size_w, self.in_size_h = config.in_size_w, config.in_size_h
-
-        self.net_G = define_G(input_nc=3, output_nc=1, ngf=64, netG=config.net_G).to(device)
-        self.load_model()
-
-        self.output_img_list = []
-
-    def set_output_size(self, input_image):
-        self.out_size_h, self.out_size_w,_ = input_image.shape
-
+class SkyReplace(Model):
+    def __init__(self, config_path="data/model_config/skyreplace_config.json", device='cuda'):
+        super().__init__(config_path=config_path, device=device, model_path=None)
+        self.config = utils.parse_config(path_to_json=self.config_path)
+        self.in_size_w, self.in_size_h = self.config.in_size_w, self.config.in_size_h
+        self.net_G = define_G(input_nc=3, output_nc=3, ngf=64, netG=self.config.net_G).to(self.device)
 
     def load_model(self):
-        # load pretrained sky matting model
-        logging.info('loading the best checkpoint...')
-        checkpoint = torch.load(os.path.join(self.ckptdir, 'best_ckpt.pt'),
+        checkpoint = torch.load(os.path.join(self.config.ckptdir, 'best_ckpt.pt'),
                                 map_location=device)
         self.net_G.load_state_dict(checkpoint['model_G_state_dict'])
         self.net_G.to(device)
         self.net_G.eval()
 
+    def process_image(self, input_image, background_image):
+        self.set_output_size(input_image)
+
+        self.config.out_size_w = self.out_size_w
+        self.config.out_size_h = self.out_size_h
+
+        self.skyboxengine = SkyBox(self.config, background_image)
+
+        img_HD = self.cvtcolor_and_resize(input_image)
+        img_HD_prev = img_HD
+
+        syneth, _, _ = self.synthesize(img_HD, img_HD_prev)
+        syneth = np.array(255.0 * syneth, dtype=np.uint8)
+
+        return syneth
+
+    def set_output_size(self, input_image):
+        self.out_size_h, self.out_size_w,_ = input_image.shape
 
     def synthesize(self, img_HD, img_HD_prev):
 
@@ -64,39 +67,9 @@ class SkyFilter():
 
         return syneth, G_pred, skymask
 
-
     def cvtcolor_and_resize(self, img_HD):
 
         img_HD = np.array(img_HD / 255., dtype=np.float32)
 
         return img_HD
-        
-    def process_gradio_image(self, input_image, sky_image, config):
-        
-        self.set_output_size(input_image)
-        
-        config.out_size_w = self.out_size_w
-        config.out_size_h = self.out_size_h
-        
-        self.skyboxengine = SkyBox(config, sky_image)
-        
-        img_HD = self.cvtcolor_and_resize(input_image)
-        img_HD_prev = img_HD
-        
-        syneth, _, _ = self.synthesize(img_HD, img_HD_prev)
-        syneth = np.array(255.0 * syneth, dtype=np.uint8)
-        
-        return syneth
-        
-def load_sky_model():
-    config = utils.parse_config(path_to_json='./models/SkyAR/config/gradio_image.json')
-    sf = SkyFilter(config)
-    
-    return sf, config
-        
-def sky_replace_gui(input_image, sky_image, model, config):
-    
-    image_sky = model.process_gradio_image(input_image, sky_image, config)
-    
-    return image_sky
-    
+

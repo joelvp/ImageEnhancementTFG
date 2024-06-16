@@ -4,7 +4,7 @@ from models.White_Balance.white_balance import WhiteBalance
 from models.LLFlow.code.lowlight import LowLight
 from models.NAFNet.denoise import Denoise
 from models.NAFNet.deblur import Deblur
-from models.SkyAR.sky_replace import load_sky_model
+from models.SkyAR.sky_replace import SkyReplace
 
 
 class ModelManager:
@@ -37,7 +37,8 @@ class ModelManager:
 
     def load_sky_model(self):
         logging.info('Loading Sky Replacement model')
-        self.sky_model, self.sky_config = load_sky_model()
+        self.sky_model = SkyReplace()
+        self.sky_model.load_model()
 
     def load_all_models(self, progress=gr.Progress()):
         logging.info('Loading all models')

@@ -8,12 +8,10 @@ import logging
 import gradio as gr
 import numpy as np
 import base64
-
 from PIL import Image
 
 from src.objects.model_manager import ModelManager
 from google_images_search import GoogleImagesSearch
-from models.SkyAR.sky_replace import sky_replace_gui
 
 
 def imread(img_path):
@@ -103,7 +101,7 @@ def apply_transformations(input_images, options, model_manager: ModelManager, sk
                     model_manager.load_sky_model()
 
                 logging.info("Applying Sky Replacement")
-                image = sky_replace_gui(image, sky_image, model_manager.sky_model, model_manager.sky_config)
+                image = model_manager.sky_model.process_image(image, sky_image)
 
         enhanced_images.append(image)
         
