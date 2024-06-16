@@ -4,7 +4,7 @@ from llamaapi import LlamaAPI
 import json
 import configparser
 
-from tenacity import retry, stop_after_attempt, wait_fixed, RetryError
+from tenacity import retry, stop_after_attempt, RetryError
 
 
 class Llama:

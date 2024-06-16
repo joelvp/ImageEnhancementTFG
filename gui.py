@@ -1,13 +1,10 @@
 import gradio as gr
-import time
-
-from models.Llama.llama import Llama
-from src.aux_functions import apply_transformations, images_to_temp_paths, google_image_search
-from src.objects.model_manager import ModelManager
 import logging
 
+from models.Llama.llama import Llama
+from src.aux_functions import *
+from src.objects.model_manager import ModelManager
 
-# Chatbot demo with multimodal input (text, markdown, LaTeX, code blocks, image, audio, & video). Plus shows support for streaming text.
 
 def update_images(input_images): return input_images
 
@@ -44,112 +41,26 @@ def apply_transformations_event(input_images, options, sky_image_input):
 
 
 def add_message(history, message):
-    if not message["files"] and message["text"] == '':
-        history.append((None, None))  # Añadir marcador cuando no hay input
-    else:
-        for x in message["files"]:
-            history.append(((x,), None))
-        if message["text"] != '':
-            history.append((message["text"], None))
+    history = process_message(history, message)
     return history, gr.MultimodalTextbox(value=None, interactive=False, placeholder="Wait to LLM response...", show_label=False)
 
 
-def add_response(history, response):
-    history[-1][1] = ""
-    for character in response:
-        history[-1][1] += character
-        time.sleep(0.01)
-        yield history
-
 
 def select_input_images_and_text(history):
-    input_images = []
-    input_text = None
-    for item in reversed(history):
-        # print("ITEM", item)
-        if isinstance(item[0], str):
-            # Si encontramos texto, verificamos si hay imágenes antes de él
-            images_found = False
-            for next_item in reversed(history[:history.index(item)]):
-                if isinstance(next_item[0], tuple):
-                    # Agregamos todas las imagenes que preceden al texto
-                    input_images.append(next_item[0][0])
-                    images_found = True
-                elif isinstance(next_item[0], str) and images_found:
-                    # Si encontramos texto después de las imagenes cortamos
-                    break
-
-            if images_found:
-                # Si habia imagenes y texto, asignamos texto y vamos al return
-                input_text = item[0]
-                break
-            else:
-                # Si no hay imagenes, asignamos solo texto y vamos al return
-                input_text = item[0]
-                input_images = []
-                break
-        elif isinstance(item[0], tuple):
-            # Si la primera entrada es una imagen, agregamos esa imagen y vamos al return
-            input_images.append(item[0][0])
-            input_text = None
-            break
-        elif item[0] is None and item[1] is None:
-            break
-
-    return input_images, input_text
+    return extract_images_and_text(history)
 
 
 def llm_bot(history):
-
-    print("History", history)
-
     input_images, input_text = select_input_images_and_text(history)
 
-    if not input_images and input_text:
-        print('Only text')
-        response = llama_model.generate(input_text, False)
-        for updated_history in add_response(history, response):
-            yield updated_history
-
-    elif input_images and not input_text:
-        print('Only image')
-        response = llama_model.generate(None, True)
-        for updated_history in add_response(history, response):
-            yield updated_history
-
-    elif input_images and input_text:
-        tasks = llama_model.generate(input_text, True)
-        print("Response LLM", tasks)
-        if tasks:
-            if 'Sky' in tasks:
-                response = "El cielo se va a reemplazar por " + str(tasks[-1])
-                for updated_history in add_response(history, response):
-                    yield updated_history
-                sky = google_image_search(tasks)
-                enhanced_images = apply_transformations(input_images, ['Sky'], model_manager, sky_image=sky)
-            elif 'No Tasks' in tasks:
-                enhanced_images = []
-                for updated_history in add_response(history, tasks[-1]):
-                    yield updated_history
-            else:
-                response = "La imagen se va a mejorar con " + str(tasks)
-                for updated_history in add_response(history, response):
-                    yield updated_history
-                enhanced_images = apply_transformations(input_images, tasks, model_manager)
-
-            output_img_paths = images_to_temp_paths(enhanced_images)
-
-            for img_path in output_img_paths:
-                history.append((None, (img_path,)))
-                yield history
-        else:
-            response = 'Especifica mejor la tarea que quieres aplicar a la imagen.'
-            for updated_history in add_response(history, response):
-                yield updated_history
-
+    if input_images and input_text:
+        yield from handle_image_and_text_input(history, input_images, input_text, llama_model, model_manager)
+    elif input_images:
+        yield from handle_image_input(history, llama_model)
+    elif input_text:
+        yield from handle_text_input(history, input_text, llama_model)
     else:
-        for updated_history in add_response(history, "Introduce una imagen y como deseas mejorarla, asi te podré mostrar todas mis habilidades."):
-            yield updated_history
+        yield from add_response(history, "Introduce una imagen y cómo deseas mejorarla, así te podré mostrar todas mis habilidades.")
 
 
 if __name__ == "__main__":

@@ -1,17 +1,18 @@
 import os
 import tempfile
-from io import BytesIO
 import random
 from typing import List
 import cv2
 import logging
-import gradio as gr
 import numpy as np
-import base64
-from PIL import Image
+import time
 
 from src.objects.model_manager import ModelManager
 from google_images_search import GoogleImagesSearch
+
+import configparser
+config = configparser.ConfigParser()
+config.read('data\config.ini')
 
 
 def imread(img_path):
@@ -20,41 +21,87 @@ def imread(img_path):
     return img
 
 
-# Image to Base 64 Converter
-def image_path_to_base64(image_path):
-    with open(image_path, 'rb') as img:
-        encoded_string = base64.b64encode(img.read())
-    return encoded_string.decode('utf-8')
+def find_images_before_text(history, text_index):
+    input_images = []
+    images_found = False
+    for next_item in reversed(history[:text_index]):
+        if isinstance(next_item[0], tuple):
+            input_images.append(next_item[0][0])
+            images_found = True
+        elif isinstance(next_item[0], str) and images_found:
+            break
+    return input_images, images_found
 
 
-def image_to_base64(image_array):
-    # Convertir el array de NumPy a una imagen en formato PIL
-    image = Image.fromarray(cv2.cvtColor(image_array, cv2.COLOR_BGR2RGB))
+def extract_images_and_text(history):
+    for item in reversed(history):
+        if isinstance(item[0], str):
+            text_index = history.index(item)
+            input_images, images_found = find_images_before_text(history, text_index)
+            return input_images, item[0] if images_found or not input_images else None
+        elif isinstance(item[0], tuple):
+            return [item[0][0]], None
+        elif item[0] is None and item[1] is None:
+            break
+    return [], None
 
-    # Crear un buffer de bytes
-    buffered = BytesIO()
 
-    # Guardar la imagen en el buffer en formato JPEG
-    image.save(buffered, format="JPEG")
+def handle_text_input(history, input_text, llama_model):
+    response = llama_model.generate(input_text, False)
+    return add_response(history, response)
 
-    # Obtener los datos binarios de la imagen
-    img_bytes = buffered.getvalue()
 
-    # Codificar los datos binarios en base64
-    encoded_string = base64.b64encode(img_bytes)
+def handle_image_input(history, llama_model):
+    response = llama_model.generate(None, True)
+    return add_response(history, response)
 
-    return encoded_string.decode('utf-8')
 
-  
-# Function that takes User Inputs and displays it on ChatUI
-def query_message(history, txt, img):
-    if not img:
-        history += [(txt, None)]
-        return history
-    base64_img = image_path_to_base64(img[0]) # Temporal solo pa una imagen
-    data_url = f"data:image/jpeg;base64,{base64_img}"
-    history += [(f"{txt} ![]({data_url})", None)]
+def handle_image_and_text_input(history, input_images, input_text, llama_model, model_manager):
+    tasks = llama_model.generate(input_text, True)
+    if tasks:
+        if 'Sky' in tasks:
+            response = f"El cielo se va a reemplazar por {tasks[-1]}"
+            for updated_history in add_response(history, response):
+                yield updated_history
+            sky = google_image_search(tasks)
+            enhanced_images = apply_transformations(input_images, ['Sky'], model_manager, sky_image=sky)
+        elif 'No Tasks' in tasks:
+            enhanced_images = []
+            for updated_history in add_response(history, tasks[-1]):
+                yield updated_history
+        else:
+            task_list = ", ".join(tasks)
+            response = f"La imagen se va a mejorar con {task_list}"
+            for updated_history in add_response(history, response):
+                yield updated_history
+            enhanced_images = apply_transformations(input_images, tasks, model_manager)
+
+        output_img_paths = images_to_temp_paths(enhanced_images)
+        for img_path in output_img_paths:
+            history.append((None, (img_path,)))
+            yield history
+    else:
+        response = 'Especifica mejor la tarea que quieres aplicar a la imagen.'
+        for updated_history in add_response(history, response):
+            yield updated_history
+
+
+def process_message(history, message):
+    if not message["files"] and message["text"] == '':
+        history.append((None, None))
+    else:
+        for x in message["files"]:
+            history.append(((x,), None))
+        if message["text"] != '':
+            history.append((message["text"], None))
     return history
+
+def add_response(history, response):
+    history[-1][1] = ""
+    for character in response:
+        history[-1][1] += character
+        time.sleep(0.01)
+        yield history
 
   
 def apply_transformations(input_images, options, model_manager: ModelManager, sky_image=None) -> List[np.ndarray]:
@@ -123,8 +170,8 @@ def images_to_temp_paths(images: List[np.ndarray]) -> List[str]:
 
 def google_image_search(query: str):
     # Configura tu API key y tu motor de búsqueda
-    API_KEY = 'AIzaSyCHGH5e0AKtnchJHOZLHgtlMzfG0Zb2YU8'
-    CX = '46ef2a835eabd4047'
+    API_KEY = config['api_keys']['google_search']
+    CX = config['google_search']['cx']
     search_params = {
         'q': query,
         'num': 5,  # Buscar 5 imágenes en lugar de 1
@@ -151,7 +198,6 @@ def google_image_search(query: str):
         if downloaded_image_paths:
             # Seleccionar una imagen aleatoria de las descargadas
             selected_image_path = random.choice(downloaded_image_paths)
-            print(f'Selected image: {selected_image_path}')
 
             # Leer la imagen usando imread
             image = imread(selected_image_path)
