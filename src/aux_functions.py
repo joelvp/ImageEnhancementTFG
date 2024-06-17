@@ -48,41 +48,45 @@ def extract_images_and_text(history):
 
 def handle_text_input(history, input_text, llama_model):
     response = llama_model.generate(input_text, False)
-    return add_response(history, response)
+    return add_response(history, response.response_text)
 
 
 def handle_image_input(history, llama_model):
     response = llama_model.generate(None, True)
-    return add_response(history, response)
+    return add_response(history, response.response_text)
 
 
 def handle_image_and_text_input(history, input_images, input_text, llama_model, model_manager):
-    tasks = llama_model.generate(input_text, True)
-    if tasks:
-        if 'Sky' in tasks:
-            response = f"El cielo se va a reemplazar por {tasks[-1]}"
-            for updated_history in add_response(history, response):
+    response = llama_model.generate(input_text, True)
+    if response.tasks:
+        if response.new_background_image:
+            response_message = f"El cielo se va a reemplazar por {response.new_background_image}"
+            for updated_history in add_response(history, response_message):
                 yield updated_history
-            sky = google_image_search(tasks)
+            sky = google_image_search(response.new_background_image)
             enhanced_images = apply_transformations(input_images, ['Sky'], model_manager, sky_image=sky)
-        elif 'No Tasks' in tasks:
+        elif 'No Tasks' in response.tasks:
             enhanced_images = []
-            for updated_history in add_response(history, tasks[-1]):
+            for updated_history in add_response(history, response.response_text):
                 yield updated_history
         else:
-            task_list = ", ".join(tasks)
-            response = f"La imagen se va a mejorar con {task_list}"
-            for updated_history in add_response(history, response):
+            task_list = ", ".join(response.tasks)
+            response_message = f"La imagen se va a mejorar con {task_list}"
+            for updated_history in add_response(history, response_message):
                 yield updated_history
-            enhanced_images = apply_transformations(input_images, tasks, model_manager)
+            enhanced_images = apply_transformations(input_images, response.tasks, model_manager)
 
         output_img_paths = images_to_temp_paths(enhanced_images)
         for img_path in output_img_paths:
             history.append((None, (img_path,)))
             yield history
+
+    elif response.error_message:
+        for updated_history in add_response(history, response.error_message):
+            yield updated_history
     else:
-        response = 'Especifica mejor la tarea que quieres aplicar a la imagen.'
-        for updated_history in add_response(history, response):
+        generic_message = 'Especifica mejor la tarea que quieres aplicar a la imagen.'
+        for updated_history in add_response(history, generic_message):
             yield updated_history
 
 
@@ -95,6 +99,7 @@ def process_message(history, message):
         if message["text"] != '':
             history.append((message["text"], None))
     return history
+
 
 def add_response(history, response):
     history[-1][1] = ""
