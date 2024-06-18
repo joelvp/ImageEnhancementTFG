@@ -5,9 +5,12 @@ from models.NAFNet.basicsr.utils.options import parse
 from models.NAFNet.basicsr.models import create_model
 from models.NAFNet.basicsr.utils import img2tensor, tensor2img
 
+import configparser
+config = configparser.ConfigParser()
+config.read('data\config.ini')
 
 class Denoise(Model):
-    def __init__(self, config_path="data/model_config/denoise_config.yml", device='cuda'):
+    def __init__(self, config_path=config['models']['denoise_config'], device='cuda'):
         super().__init__(config_path=config_path, device=device, model_path=None)
 
     def load_model(self):

@@ -7,9 +7,12 @@ import torch
 
 from src.objects.model import Model
 
+import configparser
+config = configparser.ConfigParser()
+config.read('data\config.ini')
 
 class SkyReplace(Model):
-    def __init__(self, config_path="data/model_config/skyreplace_config.json", device='cuda'):
+    def __init__(self, config_path=config['models']['sky_replace_config'], device='cuda'):
         super().__init__(config_path=config_path, device=device, model_path=None)
         self.config = utils.parse_config(path_to_json=self.config_path)
         self.in_size_w, self.in_size_h = self.config.in_size_w, self.config.in_size_h

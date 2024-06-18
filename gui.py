@@ -5,6 +5,10 @@ from models.Llama.llama import Llama
 from src.aux_functions import *
 from src.objects.model_manager import ModelManager
 
+import configparser
+config = configparser.ConfigParser()
+config.read('data\config.ini')
+
 
 def update_images(input_images): return input_images
 
@@ -101,7 +105,7 @@ if __name__ == "__main__":
 
             # Sky image input (initially hidden)
             sky_image_input = gr.Image(
-                "data/demo_images/skybox/galaxy.jpg",
+                value=config["gradio"]["background_image"],
                 elem_id="sky_image_input",
                 label="Sky Image",
                 visible=False,

@@ -5,9 +5,13 @@ from src.objects.model import Model
 from models.White_Balance.arch import deep_wb_model, deep_wb_single_task, splitNetworks
 from models.White_Balance.utilities.deepWB import deep_wb
 
+import configparser
+config = configparser.ConfigParser()
+config.read('data\config.ini')
+
 
 class WhiteBalance(Model):
-    def __init__(self, model_path='./models/White_Balance/models', device='cuda'):
+    def __init__(self, model_path=config['models']['wb_model'], device='cuda'):
         super().__init__(model_path=model_path, device=device, config_path=None)
 
     def load_model(self):

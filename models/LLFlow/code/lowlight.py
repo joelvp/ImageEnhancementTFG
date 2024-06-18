@@ -4,9 +4,13 @@ import torch
 from models.LLFlow.code.test_unpaired import auto_padding, hiseq_color_cv2_img, load_LLFlow_model, rgb, t
 from src.objects.model import Model
 
+import configparser
+config = configparser.ConfigParser()
+config.read('data\config.ini')
+
 
 class LowLight(Model):
-    def __init__(self, config_path="data/model_config/lowlight_config.yml", device='cuda'):
+    def __init__(self, config_path=config['models']['lowlight_config'], device='cuda'):
         super().__init__(config_path=config_path, device=device, model_path=None)
         self.opt = {}
 

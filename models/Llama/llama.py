@@ -11,7 +11,7 @@ class Llama:
     def __init__(self):
         self.config = self.load_config('data/config.ini')
         self.llama_api = LlamaAPI(self.config['api_keys']['llama'])
-        self.prompts = self.load_json('data/prompts.json')
+        self.prompts = self.load_json(self.config['llama']['prompts'])
 
     def load_config(self, path):
         config = configparser.ConfigParser()
