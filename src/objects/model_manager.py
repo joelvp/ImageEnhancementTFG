@@ -19,26 +19,31 @@ class ModelManager:
         logging.info("Loading Low Light model")
         self.ll_model = LowLight()
         self.ll_model.load_model()
+        logging.info("Low Light model loaded")
         
     def load_denoise_model(self):
         logging.info("Loading Denoising model")
         self.denoise_model = Denoise()
         self.denoise_model.load_model()
+        logging.info("Denoising model loaded")
         
     def load_deblur_model(self):
         logging.info("Loading Deblurring model")
         self.deblur_model = Deblur()
         self.deblur_model.load_model()
+        logging.info("Deblurring model loaded")
 
     def load_wb_model(self):
         logging.info('Loading White Balance model')
         self.wb_model = WhiteBalance()
         self.wb_model.load_model()
+        logging.info('White Balance model loaded')
 
     def load_sky_model(self):
         logging.info('Loading Sky Replacement model')
         self.sky_model = SkyReplace()
         self.sky_model.load_model()
+        logging.info('Sky Replacement model loaded')
 
     def load_all_models(self, progress=gr.Progress()):
         logging.info('Loading all models')
@@ -60,7 +65,6 @@ class ModelManager:
             load_function()
 
             current_progress += step_increment
-            logging.info(f"{model_name} loaded")
 
         logging.info("All models loaded")
 

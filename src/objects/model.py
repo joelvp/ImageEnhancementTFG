@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 
 from tenacity import retry, stop_after_attempt
 
-from models.utils import clear_cuda_cache
+from models.utils import clear_cuda_cache, reset_gradio_flag
 
 
 class Model(ABC):
@@ -19,9 +19,11 @@ class Model(ABC):
     def load_model(self):
         pass
 
-    @retry(stop=stop_after_attempt(3), before=clear_cuda_cache)
+    @retry(stop=stop_after_attempt(3), before=clear_cuda_cache, reraise=True)
     def process_image(self, input_image):
-        return self._process_image_impl(input_image)
+        image = self._process_image_impl(input_image)
+        reset_gradio_flag()
+        return image
 
     @abstractmethod
     def _process_image_impl(self, input_image):

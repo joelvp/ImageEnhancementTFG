@@ -6,7 +6,9 @@ import cv2
 import logging
 import numpy as np
 import time
+import gradio as gr
 
+from models.utils import reset_gradio_flag
 from src.objects.model_manager import ModelManager
 from google_images_search import GoogleImagesSearch
 
@@ -117,43 +119,55 @@ def apply_transformations(input_images, options, model_manager: ModelManager, sk
         image = imread(image)
 
         for option in options:
-            if option == "Low Light":
-                if model_manager.ll_model is None:
-                    model_manager.load_ll_model()
+            try:
+                if option == "Low Light":
+                    if model_manager.ll_model is None:
+                        model_manager.load_ll_model()
 
-                logging.info("Applying Low Light")
-                image = model_manager.ll_model.process_image(image)
+                    logging.info("Applying Low Light")
+                    image = model_manager.ll_model.process_image(image)
+                    logging.info("Low Light applied!")
 
-            elif option == "Denoise":
-                if model_manager.denoise_model is None:
-                    model_manager.load_denoise_model()
+                elif option == "Denoise":
+                    if model_manager.denoise_model is None:
+                        model_manager.load_denoise_model()
 
-                logging.info("Applying Denoising")
-                image = model_manager.denoise_model.process_image(image)
-                
-            elif option == "Deblur":
-                if model_manager.deblur_model is None:
-                    model_manager.load_deblur_model()
+                    logging.info("Applying Denoising")
+                    image = model_manager.denoise_model.process_image(image)
+                    logging.info("Denoising applied!")
 
-                logging.info("Applying Deblurring")
-                image = model_manager.deblur_model.process_image(image)
+                elif option == "Deblur":
+                    if model_manager.deblur_model is None:
+                        model_manager.load_deblur_model()
 
-            elif option == "White Balance":
-                if model_manager.wb_model is None:
-                    model_manager.load_wb_model()
+                    logging.info("Applying Deblurring")
+                    image = model_manager.deblur_model.process_image(image)
+                    logging.info("Deblurring applied!")
 
-                logging.info("Applying White Balance")
-                image = model_manager.wb_model.process_image(image)
+                elif option == "White Balance":
+                    if model_manager.wb_model is None:
+                        model_manager.load_wb_model()
 
-            elif option == "Sky":
-                if sky_image is None:
-                    raise gr.Error("Sky image needed!")
+                    logging.info("Applying White Balance")
+                    image = model_manager.wb_model.process_image(image)
+                    logging.info("White Balance applied!")
 
-                if model_manager.sky_model is None:
-                    model_manager.load_sky_model()
+                elif option == "Sky":
+                    if sky_image is None:
+                        raise gr.Error("Sky image needed!")
 
-                logging.info("Applying Sky Replacement")
-                image = model_manager.sky_model.process_image(image, sky_image)
+                    if model_manager.sky_model is None:
+                        model_manager.load_sky_model()
+
+                    logging.info("Applying Sky Replacement")
+                    image = model_manager.sky_model.process_image(image, sky_image)
+                    logging.info("Sky Replacement applied!")
+
+            except RuntimeError as e:
+                if 'CUDA out of memory' in str(e):
+                    reset_gradio_flag()
+                    logging.error(f"Error applying {option}: CUDA error out of memory")
+                    gr.Info(f"Not applied {option} because CUDA error out of memory")
 
         enhanced_images.append(image)
         

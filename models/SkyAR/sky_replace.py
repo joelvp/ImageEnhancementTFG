@@ -8,7 +8,7 @@ from models.SkyAR.skyboxengine import *
 import models.SkyAR.utils as utils
 import torch
 
-from models.utils import clear_cuda_cache
+from models.utils import clear_cuda_cache, reset_gradio_flag
 from src.objects.model import Model
 
 import configparser
@@ -32,7 +32,9 @@ class SkyReplace(Model):
     @retry(stop=stop_after_attempt(3), before=clear_cuda_cache)
     def process_image(self, input_image, background_image=None):
         # Lógica específica para procesar la imagen y reemplazar el cielo
-        return self._process_image_impl(input_image, background_image)
+        image = self._process_image_impl(input_image, background_image)
+        reset_gradio_flag()
+        return image
 
     def _process_image_impl(self, input_image, background_image):
         self.set_output_size(input_image)

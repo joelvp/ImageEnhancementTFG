@@ -90,8 +90,8 @@ if __name__ == "__main__":
                 label="Input Images",
                 elem_id="input_gallery",
                 show_label=False,
-                columns=[3],
-                rows=[1],
+                columns=3,
+                rows=1,
                 object_fit="contain",
                 height="auto"
             )
@@ -116,14 +116,15 @@ if __name__ == "__main__":
             # Sky image input depends on Sky CheckBox
             options.change(switch, options, sky_image_input)
 
-            btn_submit = gr.Button("Submit", scale=0)
+            btn_submit = gr.Button("Enhance", scale=0)
 
             output_gallery = gr.Gallery(
                 label="Output Images",
                 elem_id="output_gallery",
+                format="png",
                 show_label=False,
-                columns=[3],
-                rows=[1],
+                columns=3,
+                rows=1,
                 object_fit="contain",
                 height="auto"
             )
