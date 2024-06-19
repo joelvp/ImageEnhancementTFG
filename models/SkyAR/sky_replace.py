@@ -1,10 +1,14 @@
 import os
 import logging
+
+from tenacity import retry, stop_after_attempt
+
 from models.SkyAR.networks import * # Cambiar en utils.py el import de la linea 4 por -> from skimage.metrics import structural_similarity as sk_cpt_ssim
 from models.SkyAR.skyboxengine import *
 import models.SkyAR.utils as utils
 import torch
 
+from models.utils import clear_cuda_cache
 from src.objects.model import Model
 
 import configparser
@@ -25,7 +29,12 @@ class SkyReplace(Model):
         self.net_G.to(device)
         self.net_G.eval()
 
-    def process_image(self, input_image, background_image):
+    @retry(stop=stop_after_attempt(3), before=clear_cuda_cache)
+    def process_image(self, input_image, background_image=None):
+        # Lógica específica para procesar la imagen y reemplazar el cielo
+        return self._process_image_impl(input_image, background_image)
+
+    def _process_image_impl(self, input_image, background_image):
         self.set_output_size(input_image)
 
         self.config.out_size_w = self.out_size_w

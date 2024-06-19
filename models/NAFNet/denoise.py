@@ -18,7 +18,7 @@ class Denoise(Model):
         opt['dist'] = False
         self.model = create_model(opt)
 
-    def process_image(self, input_image):
+    def _process_image_impl(self, input_image):
         #TODO Revisar esto
         # Comprobar si el tipo de datos no es float32 y convertirlo si es necesario
         if input_image.dtype != np.float32:

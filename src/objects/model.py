@@ -2,6 +2,10 @@ import torch
 import logging
 from abc import ABC, abstractmethod
 
+from tenacity import retry, stop_after_attempt
+
+from models.utils import clear_cuda_cache
+
 
 class Model(ABC):
     def __init__(self, model_path, config_path, device='cuda'):
@@ -15,6 +19,10 @@ class Model(ABC):
     def load_model(self):
         pass
 
-    @abstractmethod
+    @retry(stop=stop_after_attempt(3), before=clear_cuda_cache)
     def process_image(self, input_image):
+        return self._process_image_impl(input_image)
+
+    @abstractmethod
+    def _process_image_impl(self, input_image):
         pass

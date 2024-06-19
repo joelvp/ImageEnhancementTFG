@@ -25,7 +25,7 @@ class WhiteBalance(Model):
             raise Exception('Model not found!!')
         self.model = net_awb
 
-    def process_image(self, input_image, task='AWB', maxsize=656):
+    def _process_image_impl(self, input_image, task='AWB', maxsize=656):
         out_awb = deep_wb(input_image, task=task.lower(), net_awb=self.model, device=self.device, s=maxsize)
         return (out_awb * 255).astype(np.uint8)
 

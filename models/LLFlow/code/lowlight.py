@@ -18,7 +18,7 @@ class LowLight(Model):
         self.model, self.opt = load_LLFlow_model(self.config_path)
         self.model.netG = self.model.netG.cuda()
 
-    def process_image(self, input_image):
+    def _process_image_impl(self, input_image):
 
         raw_shape = input_image.shape
         input_image, padding_params = auto_padding(input_image)
