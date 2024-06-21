@@ -1,5 +1,5 @@
 **/__pycache__/
-/data/
-/models/GeoProj/dataset/
+imageenhancementtfg/data/
+imageenhancementtfg/models/GeoProj/dataset/
 *.pt
 *.pth

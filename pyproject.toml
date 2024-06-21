@@ -1,0 +1,42 @@
+[tool.poetry]
+name = "imageenhancementtfg"
+version = "0.1.0"
+description = ""
+authors = ["joelvp <jvaldep@teleco.upv.es>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = {version = "^2.3.1+cu121", source = "pytorch"}
+addict = "^2.4.0"
+future = "^1.0.0"
+lmdb = "^1.4.1"
+numpy = "<2.0.0"
+opencv-python = "^4.10.0.84"
+pillow = "^10.3.0"
+pyyaml = "^6.0.1"
+requests = "^2.32.3"
+scikit-image = "^0.24.0"
+scipy = "^1.13.1"
+tb-nightly = "^2.18.0a20240616"
+tqdm = "^4.66.4"
+yapf = "^0.40.2"
+gradio = "^4.36.1"
+llamaapi = "^0.1.36"
+tenacity = "^8.4.1"
+torchvision = {version = "^0.18.1+cu121", source = "pytorch"}
+scikit-learn = "^1.5.0"
+natsort = "^8.4.0"
+opencv-contrib-python = "^4.10.0.84"
+google-images-search = "^1.4.6"
+windows-curses = "^2.3.3"
+
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cu121"
+priority = "explicit"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
