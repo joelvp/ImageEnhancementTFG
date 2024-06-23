@@ -130,7 +130,7 @@ class WhiteBalance(Model):
         return net_awb
 
     @staticmethod
-    def _get_model_instance(self, model_path: str) -> torch.nn.Module:
+    def _get_model_instance(model_path: str) -> torch.nn.Module:
         """
         Get an instance of the appropriate white balance model based on the model path.
 

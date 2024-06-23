@@ -316,6 +316,14 @@ def apply_transformations(input_images: List[str], options: List[str], model_man
                     image = model_manager.sky_model.process_image(image, sky_image)
                     logging.info("Sky Replacement applied!")
 
+                elif option == "Fish Eye":
+                    if model_manager.lens_distortion_model is None:
+                        model_manager.load_lens_distortion_model()
+
+                    logging.info("Applying Fish Eye Correction")
+                    image = model_manager.lens_distortion_model.process_image(image)
+                    logging.info("Fish Eye correction applied!")
+
                 else:
                     logging.warning(f"No valid option selected for enhancement: {option}")
 

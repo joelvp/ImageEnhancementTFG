@@ -5,8 +5,8 @@ import math
 import argparse
 
 parser = argparse.ArgumentParser(description='resamping')
-parser.add_argument("--img_path", type=str, default='C:/Users/JoelVP/Desktop/Kimera/GeoProj/test/images/barrel.jpg')
-parser.add_argument("--flow_path", type=str, default='C:/Users/JoelVP/Desktop/Kimera/GeoProj/test/images/barrel.jpg')
+parser.add_argument("--img_path", type=str, default='C:/Users/JoelVP/Desktop/Kimera/Lens_Distortion/test/images/barrel.jpg')
+parser.add_argument("--flow_path", type=str, default='C:/Users/JoelVP/Desktop/Kimera/Lens_Distortion/test/images/barrel.jpg')
 args = parser.parse_args()
 
 
@@ -197,9 +197,3 @@ def rectification(distorted, flow):
     resultMsk = resultMsk.copy_to_host()
 
     return resultImg, resultMsk
-
-
-'''distortedImg = io.imread(args.img_path)
-flow = np.load(args.flow_path,allow_pickle=True)
-resImg, resMsk = rectification(distortedImg, flow)
-io.imsave(resImg, 'result.png')'''

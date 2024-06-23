@@ -12,8 +12,8 @@ import shutil
 
 # For parsing command-line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--sourcedir", type=str, default='C:/Users/JoelVP/Desktop/UPV/ImageEnhancementTFG/models/GeoProj/dataset/Places25k')
-parser.add_argument("--datasetdir", type=str, default='C:/Users/JoelVP/Desktop/UPV/ImageEnhancementTFG/models/GeoProj/dataset/Data_gen')
+parser.add_argument("--sourcedir", type=str, default='C:/Users/JoelVP/Desktop/UPV/ImageEnhancementTFG/models/Lens_Distortion/dataset/Places25k')
+parser.add_argument("--datasetdir", type=str, default='C:/Users/JoelVP/Desktop/UPV/ImageEnhancementTFG/models/Lens_Distortion/dataset/Data_gen')
 parser.add_argument("--trainnum", type=int, default=20000, help='number of the training set')
 parser.add_argument("--testnum", type=int, default=2000, help='number of the test set')
 parser.add_argument("--data_augmentation", action='store_true', help='augmentation data')

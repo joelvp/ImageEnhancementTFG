@@ -1,5 +1,7 @@
 import logging
 import gradio as gr
+
+from models.Lens_Distortion.lens_distortion import LensDistortion
 from models.White_Balance.white_balance import WhiteBalance
 from models.LLFlow.code.lowlight import LowLight
 from models.NAFNet.denoise import Denoise
@@ -33,6 +35,7 @@ class ModelManager:
         self.denoise_model = None
         self.sky_model = None
         self.deblur_model = None
+        self.lens_distortion_model = None
 
     def load_ll_model(self) -> None:
         """
@@ -69,6 +72,15 @@ class ModelManager:
         self.wb_model = WhiteBalance()
         self.wb_model.load_model()
         logging.info('White Balance model loaded')
+
+    def load_lens_distortion_model(self) -> None:
+        """
+        Load the Lens Distortion model.
+        """
+        logging.info('Loading Lens Distortion model')
+        self.lens_distortion_model = LensDistortion()
+        self.lens_distortion_model.load_model()
+        logging.info('Lens Distortion model loaded')
 
     def load_sky_model(self) -> None:
         """

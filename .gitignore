@@ -1,7 +1,10 @@
 **/__pycache__/
 imageenhancementtfg/data/demo_images/
 imageenhancementtfg/data/config.ini
-imageenhancementtfg/models/GeoProj/
+imageenhancementtfg/models/Lens_Distortion/checkpoints
+imageenhancementtfg/models/Lens_Distortion/dataset
+imageenhancementtfg/models/Lens_Distortion/models
+imageenhancementtfg/models/Lens_Distortion/data
 **/wandb/
 *.pt
 *.pth
