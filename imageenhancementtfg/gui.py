@@ -1,34 +1,67 @@
 import gradio as gr
-import logging
-
-from models.Llama.llama import Llama
-from src.aux_functions import *
+from typing import Dict
+from src.utils import *
 from src.objects.model_manager import ModelManager
 
-import configparser
-config = configparser.ConfigParser()
-config.read('data\config.ini')
+HistoryItem: TypeAlias = Union[Tuple[str, str], Tuple[Optional[str], str], Tuple[str, Optional[str]], Tuple[Optional[Tuple[str]], Optional[str]]]
+History: TypeAlias = List[HistoryItem]
 
 
-def update_images(input_images): return input_images
+def update_images(input_images: gr.File) -> gr.File:
+    """
+    Updates the input images displayed in the Gradio File component.
+
+    Parameters:
+            input_images (gr.File): The input file component from Gradio.
+
+    Returns:
+            gr.File: Updated input file component.
+    """
+    return input_images
 
 
 # Definir una función para cargar todos los modelos
-def load_all_models():
+def load_all_models() -> tuple[gr.Button, gr.Textbox]:
+    """
+    Loads all models and returns a button and textbox.
+
+    Returns:
+            tuple[gr.Button, gr.Textbox]: Button indicating models are loaded and a hidden textbox.
+    """
     model_manager.load_all_models()
     return gr.Button(value="Modelos cargados!", interactive=False, visible=True, variant="secondary"), gr.Textbox(visible=False)
 
 
-def waiting_loading_models():
+def waiting_loading_models() -> gr.Button:
+    """
+    Returns a button indicating models are being loaded.
+
+    Returns:
+            gr.Button: Button indicating models are being loaded.
+    """
     return gr.Button("Cargando modelos...", interactive=False)
 
 
-def show_progress_box():
+def show_progress_box() -> gr.Textbox:
+    """
+    Returns a textbox displaying progress.
+
+    Returns:
+            gr.Textbox: Textbox displaying progress.
+    """
     return gr.Textbox(value="Waiting", visible=True)
 
 
-def switch(options: list):
-    """ Sky image input visibility"""
+def switch(options: list[str]) -> gr.Image:
+    """
+    Controls visibility of Sky image based on options.
+
+    Parameters:
+            options (list[str]): List of options selected.
+
+    Returns:
+            gr.Image: Image component either visible or hidden based on 'Sky' option.
+    """
     if "Sky" in options:
         return gr.Image(visible=True)
 
@@ -36,25 +69,60 @@ def switch(options: list):
         return gr.Image(visible=False)
 
 
-def apply_transformations_event(input_images, options, sky_image_input):
-    # Funcion para poder usar model_manager en el contexto Gradio, es una funcion auxiliar
-    # Gradio ejecuta una funcion con todo argumentos de tipo Gradio y dentro de esta funcion ya usamos la funcion original y instancia de ModelManager
+def apply_transformations_event(input_images: List[str], options: List[str], sky_image_input: Optional[np.ndarray]) -> List[np.ndarray]:
+    """
+        Event handler to apply transformations based on user inputs.
 
+        Parameters:
+                input_images (List[str]: Input images from user.
+                options (List[str]): List of transformation options.
+                sky_image_input (Optional[np.ndarray]): Sky image input component.
+
+        Returns:
+                List[np.ndarray]: List of enhanced images as NumPy arrays.
+        """
     enhanced_images = apply_transformations(input_images, options, model_manager, sky_image_input)
     return enhanced_images
 
 
-def add_message(history, message):
+def add_message(history: History, message: Dict) -> tuple[History, gr.MultimodalTextbox]:
+    """
+    Adds the user message to the chat history and updates the input textbox.
+
+    Parameters:
+            history (History): Chat history.
+            message (Dict): "text" and "files", both optional, of the user input
+    Returns:
+            tuple[History, gr.MultimodalTextbox]: Updated history and a MultimodalTextbox component.
+    """
     history = process_message(history, message)
     return history, gr.MultimodalTextbox(value=None, interactive=False, placeholder="Wait to LLM response...", show_label=False)
 
 
+def select_input_images_and_text(history: History) -> Tuple[list, str]:
+    """
+    Selects input images and text from chat history.
 
-def select_input_images_and_text(history):
+    Parameters:
+            history (History): Chat history.
+
+    Returns:
+            Tuple[list, str]: List of input images and input text.
+    """
     return extract_images_and_text(history)
 
 
-def llm_bot(history):
+def llm_bot(history: History) -> Iterator[History]:
+    """
+        Generates responses with LlamaAPI based on the user input.
+
+        Parameters:
+                history (History): Chat history.
+
+        Returns:
+                Iterator[History]: Responses with LlamaAPI.
+
+        """
     input_images, input_text = select_input_images_and_text(history)
 
     if input_images and input_text:
@@ -73,11 +141,10 @@ if __name__ == "__main__":
     llama_model = Llama()
 
     with gr.Blocks() as demo:
-        # Crear el botón con su estado inicial
+
         toggle_btn = gr.Button("Cargar modelos", variant="primary", interactive=True)
         progress_text_box = gr.Textbox(visible=False)
 
-        # Asocia las funciones al evento de clic del botón
         toggle_btn.click(waiting_loading_models, outputs=toggle_btn, queue=False)
         toggle_btn.click(show_progress_box, outputs=progress_text_box, queue=False)
         toggle_btn.click(load_all_models, outputs=[toggle_btn, progress_text_box])
@@ -109,14 +176,14 @@ if __name__ == "__main__":
                 elem_id="sky_image_input",
                 label="Sky Image",
                 visible=False,
-                height=500,  # Establece la altura máxima de la imagen
-                width=10000  # Establece la anchura máxima de la imagen
+                height=500,
+                width=10000
             )
 
             # Sky image input depends on Sky CheckBox
             options.change(switch, options, sky_image_input)
 
-            btn_submit = gr.Button("Enhance", scale=0)
+            btn_submit = gr.Button("Enhance", variant="primary")
 
             output_gallery = gr.Gallery(
                 label="Output Images",

@@ -1,115 +1,216 @@
-from copy import deepcopy
-from llamaapi import LlamaAPI
-import json
-import configparser
-from tenacity import retry, stop_after_attempt, RetryError
+from typing import Optional
 
 from models.Llama.objects.llama_response import LlamaResponse
+from models.Llama.utils import *
+from models.utils import load_config
 
 
 class Llama:
+    """
+        A class to interact with the Llama API for generating responses based on text and image inputs.
+
+        Attributes
+        ----------
+        config : dict
+            Configuration loaded from 'data/config.ini'.
+        llama_api : LlamaAPI
+            Instance of the LlamaAPI.
+        prompts : dict
+            Dictionary containing the prompts.
+
+        Methods
+        -------
+        generate(message: Optional[str], image: Optional[bool]) -> LlamaResponse:
+            Generate a response based on the message and image provided.
+        handle_image_and_text(message: str) -> LlamaResponse:
+            Handle the case where both image and text are provided.
+        handle_text(message: str) -> LlamaResponse:
+            Handle the case where only text is provided.
+        handle_image_only() -> LlamaResponse:
+            Handle the case where only an image is provided.
+        fetch_response_content(api_json: dict) -> LlamaResponse:
+            Fetch the response content from the API.
+        process_image_and_text_response(response_dict: dict, message: str) -> LlamaResponse:
+            Process the response for image and text input.
+        response_to_no_tasks(message: str) -> LlamaResponse:
+            Generate a response when no tasks are detected.
+        handle_error(error: Exception) -> LlamaResponse:
+            Handle any errors that occur during processing.
+        """
     def __init__(self):
-        self.config = self.load_config('data/config.ini')
+        """
+       Constructs all the necessary attributes for the Llama object.
+       """
+        self.config = load_config('data/config.ini')
         self.llama_api = LlamaAPI(self.config['api_keys']['llama'])
-        self.prompts = self.load_json(self.config['llama']['prompts'])
+        self.prompts = load_json(self.config['llama']['prompts'])
+        logging.info("Llama model initialized")
 
-    def load_config(self, path):
-        config = configparser.ConfigParser()
-        config.read(path)
-        return config
+    def generate(self, message: Optional[str], image: Optional[bool]) -> LlamaResponse:
+        """
+        Generate a response based on the message and image provided.
 
-    def load_json(self, path):
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f)
+        Parameters
+        ----------
+        message : Optional[str]
+            The message content.
+        image : Optional[bool]
+            Flag indicating if an image is included.
 
-    def generate(self, message, image) -> LlamaResponse:
+        Returns
+        -------
+        LlamaResponse
+            The generated response.
+        """
         if image and message:
+            logging.info("Both image and text provided. Processing image and text input...")
             return self.handle_image_and_text(message)
         elif not image and message:
+            logging.info("Only text provided. Processing text input...")
             return self.handle_text(message)
         elif image and not message:
+            logging.info("Only image provided. Processing image input...")
             return self.handle_image_only()
-        else:
-            return self.handle_no_input()
 
-    def handle_image_and_text(self, message) -> LlamaResponse:
-        prompt = self.get_prompt('task_chooser')
-        api_json = self.create_api_json(prompt, f"Extraiga la informacion deseada de la siguiente frase:\n\n{message}")
+    def handle_image_and_text(self, message: str) -> LlamaResponse:
+        """
+        Handle the case where both image and text are provided.
+
+        Parameters
+        ----------
+        message : str
+            The message content.
+
+        Returns
+        -------
+        LlamaResponse
+            The response for image and text input.
+        """
+        prompt = get_prompt(self.prompts, 'task_chooser')
+        api_json = create_api_json(prompt, f"Extraiga la informacion deseada de la siguiente frase:\n\n{message}")
 
         try:
-            response_dict = self.get_response_dict(api_json)
+            response_dict = get_response_dict(self.llama_api, api_json)
             return self.process_image_and_text_response(response_dict, message)
         except (RetryError, Exception) as e:
             return self.handle_error(e)
 
-    def handle_text(self, message) -> LlamaResponse:
-        prompt = self.get_prompt('plain_text')
-        api_json = self.create_api_json(prompt, message)
+    def handle_text(self, message: str) -> LlamaResponse:
+        """
+        Handle the case where only text is provided.
+
+        Parameters
+        ----------
+        message : str
+            The message content.
+
+        Returns
+        -------
+        LlamaResponse
+            The response for text input.
+        """
+        prompt = get_prompt(self.prompts, 'plain_text')
+        api_json = create_api_json(prompt, message)
         return self.fetch_response_content(api_json)
 
     def handle_image_only(self) -> LlamaResponse:
-        api_json = self.get_prompt('only_picture')
+        """
+        Handle the case where only an image is provided.
+
+        Returns
+        -------
+        LlamaResponse
+            The response for image input.
+        """
+        api_json = get_prompt(self.prompts, 'only_picture')
         return self.fetch_response_content(api_json)
 
-    def handle_no_input(self) -> LlamaResponse:
-        api_json = self.get_prompt('nothing')
-        return self.fetch_response_content(api_json)
+    def fetch_response_content(self, api_json: dict) -> LlamaResponse:
+        """
+        Fetch the response content from the API.
 
-    def create_api_json(self, prompt, message):
-        api_json = deepcopy(prompt)
-        new_message = {"role": "user", "content": message}
-        api_json["messages"].append(new_message)
-        return api_json
+        Parameters
+        ----------
+        api_json : dict
+            The API JSON structure.
 
-    @retry(stop=stop_after_attempt(3))
-    def call_llama_api(self, api_json):
-        print("Llama API call...")
-        response = self.llama_api.run(api_json)
-        return response
-
-    def get_response_dict(self, api_json):
-        response = self.call_llama_api(api_json).json()
-        response_dict = response['choices'][0]['message']['function_call']['arguments']
-        if isinstance(response_dict, str):
-            response_dict = json.loads(response_dict)
-        return response_dict
-
-    def fetch_response_content(self, api_json) -> LlamaResponse:
+        Returns
+        -------
+        LlamaResponse
+            The response content.
+        """
         try:
-            response = self.call_llama_api(api_json).json()
+            response = call_llama_api(self.llama_api, api_json)
             content = response['choices'][0]['message']['content']
             return LlamaResponse(response_text=content)
         except (RetryError, Exception) as e:
             return self.handle_error(e)
 
-    def process_image_and_text_response(self, response_dict, message) -> LlamaResponse:
-        self.convert_str_to_bool(response_dict, 'mejora_imagen')
-        self.convert_str_to_bool(response_dict, 'cambio_cielo')
+    def process_image_and_text_response(self, response_dict: dict, message: str) -> LlamaResponse:
+        """
+        Process the response for image and text input.
 
-        if response_dict['mejora_imagen'] and not response_dict['cambio_cielo']:
+        Parameters
+        ----------
+        response_dict : dict
+            The response dictionary from the API.
+        message : str
+            The message content.
+
+        Returns
+        -------
+        LlamaResponse
+            The processed response.
+        """
+        enhance = convert_str_to_bool(response_dict, 'mejora_imagen')
+        sky_replacement = convert_str_to_bool(response_dict, 'cambio_cielo')
+
+        if enhance and not sky_replacement:
             return LlamaResponse(tasks=response_dict['tareas'])
-        elif response_dict['cambio_cielo']:
-            return LlamaResponse(tasks=["Sky"], new_background_image=response_dict['new_background_image'])
+        elif sky_replacement:
+            if "cambiando el cielo" not in response_dict['tareas']:
+                response_dict['tareas'].append("cambiando el cielo")
+            return LlamaResponse(tasks=response_dict['tareas'], new_background_image=response_dict['new_background_image'])
         else:
             return self.response_to_no_tasks(message)
 
-    def convert_str_to_bool(self, response_dict, key):
-        if isinstance(response_dict.get(key), str):
-            response_dict[key] = response_dict[key].lower() == 'true'
+    def response_to_no_tasks(self, message: str) -> LlamaResponse:
+        """
+        Generate a response when no tasks are detected.
 
-    def response_to_no_tasks(self, message) -> LlamaResponse:
-        prompt = self.get_prompt('no_tasks')
-        api_json = self.create_api_json(prompt, message)
+        Parameters
+        ----------
+        message : str
+            The message content.
+
+        Returns
+        -------
+        LlamaResponse
+            The response indicating no tasks.
+        """
+        prompt = get_prompt(self.prompts, 'no_tasks')
+        api_json = create_api_json(prompt, message)
         try:
-            response = self.call_llama_api(api_json).json()
+            response = call_llama_api(self.llama_api, api_json)
             content = response['choices'][0]['message']['content']
             return LlamaResponse(tasks=["No Tasks"], response_text=content)
         except (RetryError, Exception) as e:
             return self.handle_error(e)
 
-    def get_prompt(self, task):
-        return deepcopy(self.prompts["prompts"][task])
+    @staticmethod
+    def handle_error(error: Exception) -> LlamaResponse:
+        """
+        Handle any errors that occur during processing.
 
-    def handle_error(self, error) -> LlamaResponse:
-        print(f"An error occurred: {error}")
+        Parameters
+        ----------
+        error : Exception
+            The exception that occurred.
+
+        Returns
+        -------
+        LlamaResponse
+            The error response.
+        """
+        logging.error(f"An error occurred: {error}")
         return LlamaResponse(error_message="Estoy teniendo fallos internos, dame otra oportunidad...")

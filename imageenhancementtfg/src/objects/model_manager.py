@@ -8,44 +8,86 @@ from models.SkyAR.sky_replace import SkyReplace
 
 
 class ModelManager:
+    """
+    Manager class for loading and handling various deep learning models.
+
+    Attributes
+    ----------
+    wb_model : WhiteBalance or None
+        Instance of the WhiteBalance model.
+    ll_model : LowLight or None
+        Instance of the LowLight model.
+    denoise_model : Denoise or None
+        Instance of the Denoise model.
+    sky_model : SkyReplace or None
+        Instance of the SkyReplace model.
+    deblur_model : Deblur or None
+        Instance of the Deblur model.
+    """
     def __init__(self):
+        """
+        Constructs a ModelManager instance with attributes initialized to None.
+        """
         self.wb_model = None
         self.ll_model = None
         self.denoise_model = None
         self.sky_model = None
         self.deblur_model = None
-        
-    def load_ll_model(self):
+
+    def load_ll_model(self) -> None:
+        """
+        Load the Low Light model.load.
+        """
         logging.info("Loading Low Light model")
         self.ll_model = LowLight()
         self.ll_model.load_model()
         logging.info("Low Light model loaded")
-        
-    def load_denoise_model(self):
+
+    def load_denoise_model(self) -> None:
+        """
+        Load the Denoising model.
+        """
         logging.info("Loading Denoising model")
         self.denoise_model = Denoise()
         self.denoise_model.load_model()
         logging.info("Denoising model loaded")
-        
-    def load_deblur_model(self):
+
+    def load_deblur_model(self) -> None:
+        """
+        Load the Deblurring model.
+        """
         logging.info("Loading Deblurring model")
         self.deblur_model = Deblur()
         self.deblur_model.load_model()
         logging.info("Deblurring model loaded")
 
-    def load_wb_model(self):
+    def load_wb_model(self) -> None:
+        """
+        Load the White Balance model.
+        """
         logging.info('Loading White Balance model')
         self.wb_model = WhiteBalance()
         self.wb_model.load_model()
         logging.info('White Balance model loaded')
 
-    def load_sky_model(self):
+    def load_sky_model(self) -> None:
+        """
+        Load the Sky Replacement model.
+        """
         logging.info('Loading Sky Replacement model')
         self.sky_model = SkyReplace()
         self.sky_model.load_model()
         logging.info('Sky Replacement model loaded')
 
-    def load_all_models(self, progress=gr.Progress()):
+    def load_all_models(self, progress: gr.Progress = gr.Progress()) -> None:
+        """
+        Load all models managed by this ModelManager.
+
+        Parameters
+        ----------
+        progress : gr.Progress, optional
+            Progress indicator for loading models (default is gr.Progress()).
+        """
         logging.info('Loading all models')
 
         models = [
@@ -61,11 +103,8 @@ class ModelManager:
 
         for model_name, load_function in models:
             progress(current_progress, desc=f"Loading {model_name}...")
-            # Load the model
             load_function()
 
             current_progress += step_increment
 
         logging.info("All models loaded")
-
-

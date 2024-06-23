@@ -1,0 +1,13 @@
+{
+  "net_G": "coord_resnet50",
+  "ckptdir": "./models/SkyAR/checkpoints_G_coord_resnet50",
+
+  "in_size_w": 384,
+  "in_size_h": 384,
+
+  "skybox_center_crop": 1,
+  "auto_light_matching": true,
+  "relighting_factor": 0.7,
+  "recoloring_factor": 0.1,
+  "halo_effect": false
+}

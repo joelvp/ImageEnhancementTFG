@@ -1,5 +1,9 @@
 **/__pycache__/
-imageenhancementtfg/data/
-imageenhancementtfg/models/GeoProj/dataset/
+imageenhancementtfg/data/demo_images/
+imageenhancementtfg/data/config.ini
+imageenhancementtfg/models/GeoProj/
+**/wandb/
 *.pt
 *.pth
+.idea
+.ipynb_checkpoints
