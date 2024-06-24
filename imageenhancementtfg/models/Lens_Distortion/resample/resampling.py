@@ -141,8 +141,6 @@ def rectification(distorted, flow):
     H = distorted.shape[0]
     W = distorted.shape[1]
 
-    print(H,W)
-
     maxIter = 100
     precision = 1e-2
 

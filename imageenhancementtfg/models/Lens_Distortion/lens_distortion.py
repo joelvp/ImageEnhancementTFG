@@ -2,11 +2,10 @@ import os
 import numpy as np
 import torch
 
-
 from models.Lens_Distortion.utils import super_resolution, transform_image
 from models.utils import load_config
 from src.objects.model import Model
-from models.Lens_Distortion.train.modelNetS_batch1 import EncoderNet, ModelNet, EPELoss
+from models.Lens_Distortion.train.modelNetS_batch1 import EncoderNet, ModelNet
 from models.Lens_Distortion.resample.resampling import rectification
 
 config = load_config('data/config.ini')
