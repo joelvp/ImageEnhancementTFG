@@ -108,6 +108,7 @@ class ModelManager:
             ("Deblurring model", self.load_deblur_model),
             ("White Balance model", self.load_wb_model),
             ("Sky Replacement model", self.load_sky_model),
+            ("Lens Distortion model", self.load_lens_distortion_model),
         ]
 
         step_increment = 1.0 / len(models)  # Progress increment for each model

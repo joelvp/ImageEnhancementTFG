@@ -215,7 +215,11 @@ Ubicar los [modelos preentrenados](https://upvedues-my.sharepoint.com/:f:/g/pers
     │       │   └── utils.py
     │       │
     │       └── gui.py
-    │
+    ├── figures/
+    │       └── ...
+    ├── LICENSES/
+    │       ├── README.md
+    │       └── ...
     ├── .gitignore
     ├── poetry.lock
     ├── pyproject.toml
@@ -283,6 +287,8 @@ Script donde se utiliza Gradio para crear una interfaz gráfica de usuario. Dond
 - **.gitignore**: Especifica los archivos y directorios que deben ser ignorados por Git.
 - **poetry.lock**: Archivo de bloqueo generado por Poetry para asegurar instalaciones consistentes.
 - **pyproject.toml**: Define los metadatos del proyecto y las dependencias gestionadas por Poetry.
+- **LICENSES**: Contiene las licencias de los repositorios usados en este proyecto.
+- **figures**: Contiene las images utilizadas en el README.md
 - **LICENSE**: Contiene la información de la licencia para el proyecto.
 - **README.md**: Proporciona una visión general del proyecto, incluyendo instrucciones de instalación y guías de uso.
 
@@ -295,3 +301,25 @@ Vuelve a la carpeta imageenhancementtfg y ejecuta el script principal:
 cd ../..
 python gui.py
 ```
+### Citations
+
+```
+@article{
+  title={ImageEnhancementTFG},
+  author={Joel Valverde de Pedro},
+  year={2024}
+}
+```
+
+### License
+
+Shield: [![CC BY-NC-SA 4.0][cc-by-nc-sa-shield]][cc-by-nc-sa]
+
+This work is licensed under a
+[Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License][cc-by-nc-sa].
+
+[![CC BY-NC-SA 4.0][cc-by-nc-sa-image]][cc-by-nc-sa]
+
+[cc-by-nc-sa]: http://creativecommons.org/licenses/by-nc-sa/4.0/
+[cc-by-nc-sa-image]: https://licensebuttons.net/l/by-nc-sa/4.0/88x31.png
+[cc-by-nc-sa-shield]: https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg
