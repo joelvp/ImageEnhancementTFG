@@ -1,6 +1,6 @@
 {
   "net_G": "coord_resnet50",
-  "ckptdir": "./models/SkyAR/checkpoints_G_coord_resnet50",
+  "ckptdir": "./models/sky_replace/model",
 
   "in_size_w": 384,
   "in_size_h": 384,

@@ -1,12 +1,12 @@
 import logging
 import gradio as gr
 
-from models.Lens_Distortion.lens_distortion import LensDistortion
-from models.White_Balance.white_balance import WhiteBalance
-from models.LLFlow.code.lowlight import LowLight
-from models.NAFNet.denoise import Denoise
-from models.NAFNet.deblur import Deblur
-from models.SkyAR.sky_replace import SkyReplace
+from models.lens_distortion.lens_distortion import LensDistortion
+from models.white_balance.white_balance import WhiteBalance
+from models.low_light.code.lowlight import LowLight
+from models.denoise_deblur.denoise import Denoise
+from models.denoise_deblur.deblur import Deblur
+from models.sky_replace.sky_replace import SkyReplace
 
 
 class ModelManager:

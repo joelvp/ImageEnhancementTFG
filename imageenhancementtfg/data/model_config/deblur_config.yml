@@ -34,7 +34,7 @@ network_g:
 
 # path
 path:
-  pretrain_network_g: ./models/NAFNet/experiments/pretrained_models/NAFNet-REDS-width64.pth
+  pretrain_network_g: ./models/denoise_deblur/experiments/pretrained_models/NAFNet-REDS-width64.pth
   strict_load_g: true
   resume_state: ~
 

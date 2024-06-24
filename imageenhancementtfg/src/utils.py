@@ -8,7 +8,7 @@ import numpy as np
 import time
 import gradio as gr
 
-from models.Llama.llama import Llama
+from models.llama.llama import Llama
 from models.utils import reset_gradio_flag, load_config
 from src.objects.model_manager import ModelManager
 from google_images_search import GoogleImagesSearch
@@ -85,7 +85,7 @@ def handle_text_input(history: History, input_text: str, llama_model: Llama) -> 
     Parameters:
         history (History): Chat history.
         input_text (str): Input text.
-        llama_model (Llama): Llama model instance.
+        llama_model (Llama): llama model instance.
 
     Returns:
         Generator[Iterator]: Updated history with the response.
@@ -101,7 +101,7 @@ def handle_image_input(history: History, llama_model: Llama) -> Iterator[History
 
     Parameters:
         history (History): Chat history.
-        llama_model (Llama): Llama model instance.
+        llama_model (Llama): llama model instance.
 
     Returns:
         Iterator[History]: Updated history with the response.
@@ -119,7 +119,7 @@ def handle_image_and_text_input(history: History, input_images: List[str], input
         history (History): Chat history.
         input_images (List[str]): List of input image paths.
         input_text (str): Input text.
-        llama_model (Llama): Llama model instance.
+        llama_model (Llama): llama model instance.
         model_manager (ModelManager): Model manager instance.
 
     Returns:
