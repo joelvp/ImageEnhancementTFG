@@ -12,12 +12,15 @@ import shutil
 
 # For parsing command-line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument("--sourcedir", type=str, default='C:/Users/JoelVP/Desktop/UPV/ImageEnhancementTFG/models/Lens_Distortion/dataset/Places25k')
-parser.add_argument("--datasetdir", type=str, default='C:/Users/JoelVP/Desktop/UPV/ImageEnhancementTFG/models/Lens_Distortion/dataset/Data_gen')
-parser.add_argument("--trainnum", type=int, default=20000, help='number of the training set')
-parser.add_argument("--testnum", type=int, default=2000, help='number of the test set')
-parser.add_argument("--data_augmentation", action='store_true', help='augmentation data')
+parser.add_argument("--sourcedir", type=str, default='C:/Users/JoelVP/Desktop/UPV/mini_dataset')
+parser.add_argument("--datasetdir", type=str, default='C:/Users/JoelVP/Desktop/UPV/ImageEnhancementTFG/imageenhancementtfg/models/Lens_Distortion/dataset/demo')
+parser.add_argument("--train_percentage", type=float, default=0.6, help='percentage of images for training (between 0 and 1)')
+parser.add_argument("--test_percentage", type=float, default=0.4, help='percentage of images for testing (between 0 and 1)')
+parser.add_argument("--data_augmentation", action='store_false', help='augmentation data')
 parser.add_argument("--augment_factor", type=int, default=3, help='augmentation factor for data')
+
+# Logging configuration
+logging.basicConfig(level=logging.INFO)
 
 # Transformations for data augmentation
 transform_auto = T.Compose([
@@ -25,16 +28,40 @@ transform_auto = T.Compose([
     ])
 transform_basic = T.Compose([
     T.RandomHorizontalFlip(p=0.5),
-    T.RandomRotation(degrees=(-45,45)),
+    T.RandomRotation(degrees=(-45, 45)),
 ])
 
+# Constants for dataset preprocessing
+IMG_WIDTH_DATASET = 256
+IMG_HEIGHT_DATASET = 256
+
+
 # Functions
-def transform_image(image, transform):
-    # Apply the provided torchvision transform
+def transform_image(image: Image.Image, transform: T.Compose) -> Image.Image:
+    """
+    Apply a torchvision transform to an image.
+
+    Parameters:
+        image (Image.Image): Input image.
+        transform (T.Compose): Torchvision transform to apply.
+
+    Returns:
+        Image.Image: Transformed image.
+    """
     augmented_image = transform(image)
 
     return augmented_image
-def augment_data(folders, augment_factor, transform):
+
+
+def augment_data(folders: dict, augment_factor: int, transform: T.Compose):
+    """
+    Augment data by applying transformations to images.
+
+    Parameters:
+        folders (dict): Dictionary containing folder paths.
+        augment_factor (int): Number of augmented images per original image.
+        transform (T.Compose): Torchvision transform for augmentation.
+    """
 
     image_files = [file for file in os.listdir(folders['processedFolder']) if
                    file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
@@ -45,36 +72,48 @@ def augment_data(folders, augment_factor, transform):
 
         for i in range(augment_factor):
             augmented_image = transform_image(original_image, transform)
-
             augmented_image_path = os.path.join(folders['processedFolder'], f'{image_file[:-4]}_{i:02d}.jpg')
-
             augmented_image.save(augmented_image_path)
+            
+            
+def rename_and_shuffle_images(folder: dict):
+    """
+    Rename and shuffle images in the processed folder.
 
-def rename_and_shuffle_images(folders):
-    files = os.listdir(folders['processedFolder'])
+    Parameters:
+        folder (dict): Dictionary containing folder paths.
+    """
+    files = os.listdir(folder['processedFolder'])
     image_files = [file for file in files if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
-
-    # Mezclar el orden de las imágenes de manera aleatoria
     random.shuffle(image_files)
 
-    # Cambiar el nombre de las imágenes en orden
     for index, old_name in enumerate(image_files):
         new_name = '{:06d}.jpg'.format(index)
-        old_path = os.path.join(folders['processedFolder'], old_name)
-        new_path = os.path.join(folders['processedFolder'], new_name)
+        old_path = os.path.join(folder['processedFolder'], old_name)
+        new_path = os.path.join(folder['processedFolder'], new_name)
         os.rename(old_path, new_path)
         logging.info(f'Renamed and shuffled: {old_name} -> {new_name}')
+        
+        
+def generatedata(types: str, folders: dict, img_width_dataset: int, img_height_dataset: int, k: int, train_flag: bool):
+    """
+    Generate distorted images and save them to respective folders.
 
-def generatedata(types, folders, img_width_dataset, img_height_dataset, k, trainFlag):
-    logging.info(f"Types: {types}, Train Flag: {trainFlag}, K: {k}")
+    Parameters:
+        types (str): Type of distortion.
+        folders (dict): Dictionary containing folder paths.
+        img_width_dataset (int): Width of the dataset images.
+        img_height_dataset (int): Height of the dataset images.
+        k (int): Index of the image.
+        train_flag (bool): Flag indicating if image is for training or testing.
+    """
+    logging.info(f"Generating data for type: {types}, Train Flag: {train_flag}, Index: {k}")
 
-    #Size of the original image to be distorted
     width = img_width_dataset * 2
     height = img_height_dataset * 2
 
     parameters = distortion_model.distortionParameter(types, img_width_dataset, img_height_dataset)
-
-    OriImg = io.imread('%s%s%s%s' % (folders['processedFolder'], '/', str(k).zfill(6), '.jpg'))
+    OriImg = io.imread(os.path.join(folders['processedFolder'], f'{k:06d}.jpg'))
     
     # Calculate start and end coordinates for the centred cutout
     crop_x_start = (OriImg.shape[1] - width) // 2
@@ -125,103 +164,200 @@ def generatedata(types, folders, img_width_dataset, img_height_dataset, k, train
                     crop_u[j - ymin, i - xmin] = u[j, i]
                     crop_v[j - ymin, i - xmin] = v[j, i]
 
-    if trainFlag:
-        saveImgPath = '%s%s%s%s%s%s' % (folders['trainDistorted'], '/', types, '_', str(k).zfill(6), '.jpg')
-        saveMatPath = '%s%s%s%s%s%s' % (folders['trainFlow'], '/', types, '_', str(k).zfill(6), '.mat')
+    if train_flag:
+        saveImgPath = f"{folders['trainDistorted']}/{types}_{k:06d}.jpg"
+        saveMatPath = f"{folders['trainFlow']}/{types}_{k:06d}.mat"
         io.imsave(saveImgPath, cropImg)
         scio.savemat(saveMatPath, {'u': crop_u, 'v': crop_v})
     else:
-        saveImgPath = '%s%s%s%s%s%s' % (folders['testDistorted'], '/', types, '_', str(k).zfill(6), '.jpg')
-        saveMatPath = '%s%s%s%s%s%s' % (folders['testFlow'], '/', types, '_', str(k).zfill(6), '.mat')
+        saveImgPath = f"{folders['testDistorted']}/{types}_{k:06d}.jpg"
+        saveMatPath = f"{folders['testFlow']}/{types}_{k:06d}.mat"
         io.imsave(saveImgPath, cropImg)
         scio.savemat(saveMatPath, {'u': crop_u, 'v': crop_v})
-        
-def filter_size_images(folders, img_width_dataset, img_height_dataset):
+
+
+def filter_images(folders: dict, img_width_dataset: int, img_height_dataset: int):
+    """
+    Filter and copy images from source directory to processed folder based on size criteria.
+
+    Parameters:
+        folders (dict): Dictionary containing folder paths.
+        img_width_dataset (int): Width of the dataset images.
+        img_height_dataset (int): Height of the dataset images.
+    """
     
     min_width = img_width_dataset * 2  # Sets the desired minimum width value
     min_height = img_height_dataset * 2  # Sets the desired minimum height value
 
-    # Copy only images that comply with the width and height requirements
     image_files = [file for file in os.listdir(folders['sourcedir']) if file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
     for image_file in image_files:
         source_path = os.path.join(folders['sourcedir'], image_file)
         destination_path = os.path.join(folders['processedFolder'], image_file)
 
-        # Obtain image dimensions
         image = Image.open(source_path)
         image_width, image_height = image.size
 
-        # Check if it meets the minimum width and height requirements
-        # and if it's a color image (not grayscale)
         if image_width >= min_width and image_height >= min_height and image.mode != 'L':
             shutil.copyfile(source_path, destination_path)
-            
-def folder_creations(args):
+
+
+def create_folders(args: argparse.Namespace) -> dict:
+    """
+    Create necessary folders for dataset generation.
+
+    Parameters:
+        args (argparse.Namespace): Parsed command-line arguments.
+
+    Returns:
+        dict: Dictionary containing folder paths.
+    """
     if not os.path.exists(args.datasetdir):
         os.mkdir(args.datasetdir)
 
-    trainDisPath = args.datasetdir + '/train_distorted'
-    trainUvPath = args.datasetdir + '/train_flow'
-    testDisPath = args.datasetdir + '/test_distorted'
-    testUvPath = args.datasetdir + '/test_flow'
-
-    if not os.path.exists(trainDisPath):
-        os.mkdir(trainDisPath)
-
-    if not os.path.exists(trainUvPath):
-        os.mkdir(trainUvPath)
-
-    if not os.path.exists(testDisPath):
-        os.mkdir(testDisPath)
-
-    if not os.path.exists(testUvPath):
-        os.mkdir(testUvPath)
+    for folder in ['trainDistorted', 'trainFlow', 'testDistorted', 'testFlow']:
+        path = os.path.join(args.datasetdir, folder)
+        if not os.path.exists(path):
+            os.mkdir(path)
         
     processed_folder = args.sourcedir + "_processed"
     if not os.path.exists(processed_folder):
         os.makedirs(processed_folder)
-        
+
     return {
         'sourcedir': args.sourcedir,
         'processedFolder': processed_folder,
         'datasetdir': args.datasetdir,
-        'trainDistorted': trainDisPath,
-        'trainFlow': trainUvPath,
-        'testDistorted': testDisPath,
-        'testFlow': testUvPath
+        'trainDistorted': os.path.join(args.datasetdir, 'trainDistorted'),
+        'trainFlow': os.path.join(args.datasetdir, 'trainFlow'),
+        'testDistorted': os.path.join(args.datasetdir, 'testDistorted'),
+        'testFlow': os.path.join(args.datasetdir, 'testFlow')
         
     }
-    
+
+
+def prepare_indexes_started_generation(folders: dict, args: argparse.Namespace) -> tuple:
+    """
+    Prepare start indexes for generating data when previous data exists.
+
+    Parameters:
+        folders (dict): Dictionary containing folder paths.
+        args (argparse.Namespace): Parsed command-line arguments.
+
+    Returns:
+        tuple: Train and test index ranges.
+    """
+    train_img_folder = folders['trainDistorted']
+    test_img_folder = folders['testDistorted']
+    train_flow_folder = folders['trainFlow']
+    test_flow_folder = folders['testFlow']
+
+    # Calculate total number of images after augmentation
+    image_files = [file for file in os.listdir(folders['processedFolder']) if
+                   file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+    total_images = len(image_files)
+
+    # Calculate trainnum and testnum based on percentages
+    trainnum_total = int(total_images * args.train_percentage)
+    testnum_total = total_images
+
+    trainnum_idx = 0
+    testnum_idx = trainnum_total
+
+    # Check train folder for existing images and determine start index
+    if os.path.exists(train_img_folder) and os.listdir(train_img_folder):
+        # Get the last index in train images.
+        train_img_files = [file for file in os.listdir(train_img_folder) if
+                           file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+        if train_img_files:
+            trainnum_idx = max([int(filename.split('_')[-1].split('.')[0]) for filename in train_img_files]) + 1
+
+        if os.path.exists(train_flow_folder) and os.listdir(train_flow_folder):
+            # Double check if is the same index as in train images, if is different get the lowest one
+            train_flow_files = [file for file in os.listdir(train_flow_folder) if
+                                file.lower().endswith(('.mat'))]
+            if train_flow_files:
+                trainnum_flow_idx = max(
+                    [int(filename.split('_')[-1].split('.')[0]) for filename in train_flow_files]) + 1
+                trainnum_idx = min(trainnum_idx, trainnum_flow_idx)
+
+                if trainnum_idx < trainnum_total:
+                    return trainnum_total, testnum_total, trainnum_idx, testnum_idx
+
+
+        # Check test folder for existing images and determine start index
+        if os.path.exists(test_img_folder) and os.listdir(test_img_folder):
+            # Get the last index in test images.
+            test_img_files = [file for file in os.listdir(test_img_folder) if
+                              file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+            if test_img_files:
+                testnum_idx = max([int(filename.split('_')[-1].split('.')[0]) for filename in test_img_files]) + 1
+
+            if os.path.exists(test_flow_folder) and os.listdir(test_flow_folder):
+                # Double check if is the same index as in test images, if is different get the lowest one
+                test_flow_files = [file for file in os.listdir(test_flow_folder) if
+                                   file.lower().endswith(('.mat'))]
+                if test_flow_files:
+                    testnum_flow_idx = max(
+                        [int(filename.split('_')[-1].split('.')[0]) for filename in test_flow_files]) + 1
+                    testnum_idx = min(testnum_idx, testnum_flow_idx)
+
+    return trainnum_total, testnum_total, trainnum_idx, testnum_idx
+
+
+def prepare_indexes_new_generation(folders: dict) -> tuple:
+    """
+    Prepare start indexes for generating data when no previous data exists.
+
+    Parameters:
+        folders (dict): Dictionary containing folder paths.
+
+    Returns:
+        tuple: Train and test index ranges.
+    """
+    # Calculate total number of images after augmentation
+    image_files = [file for file in os.listdir(folders['processedFolder']) if
+                   file.lower().endswith(('.jpg', '.jpeg', '.png', '.gif'))]
+    total_images = len(image_files)
+
+    # Calculate trainnum and testnum based on percentages
+    trainnum_total = int(total_images * args.train_percentage)
+    testnum_total = total_images
+
+    trainnum_idx = 0
+    testnum_idx = trainnum_total
+
+    return trainnum_total, testnum_total, trainnum_idx, testnum_idx
+
+
 
 ##### MAIN #####
 if __name__ == '__main__':
     logging.basicConfig(level=logging.INFO)
     
     args = parser.parse_args()
-    
-    folders = folder_creations(args)
-    
-    img_width_dataset = 256
-    img_height_dataset = 256
-    
-    rename = False # Cambiar a False
-        
-    ##### Filter Size Images #####
-    if not os.listdir(folders['processedFolder']):
-        filter_size_images(folders, img_width_dataset, img_height_dataset)
-        rename = True
-    ##### Augment Data #####
-    if args.data_augmentation:
-        augment_data(folders, args.augment_factor, transform_basic)
+    folders = create_folders(args)
 
-    ##### Rename and shuffle Images #####
-    if rename:
+    if not os.listdir(folders['processedFolder']): # If empty processed folder with dataset is new generation
+        filter_images(folders, IMG_WIDTH_DATASET, IMG_HEIGHT_DATASET)
+
+        ##### Augment Data #####
+        if args.data_augmentation:
+            print("Hey")
+            augment_data(folders, args.augment_factor, transform_basic)
+
+        ##### Rename and shuffle Images #####
         rename_and_shuffle_images(folders)
+
+        ##### Prepare indexes #####
+        trainnum_total, testnum_total, trainnum_idx, testnum_idx = prepare_indexes_new_generation(folders)
+
+    else: # If processed folder with dataset exists, then check how many final images are there
+        trainnum_total, testnum_total, trainnum_idx, testnum_idx = prepare_indexes_started_generation(folders, args)
 
     # Only barrel
     for types in ['barrel']:
-        for k in range(19625, args.trainnum):
-            generatedata(types,folders,img_width_dataset, img_height_dataset, k, trainFlag=True)
+        for k in range(trainnum_idx, trainnum_total):
+            generatedata(types,folders,IMG_WIDTH_DATASET, IMG_HEIGHT_DATASET, k, train_flag=True)
 
-        for k in range(args.trainnum, args.trainnum + args.testnum):
-            generatedata(types, folders, img_width_dataset, img_height_dataset, k, trainFlag=False)
+        for k in range(testnum_idx, testnum_total):
+            generatedata(types, folders, IMG_WIDTH_DATASET, IMG_HEIGHT_DATASET, k, train_flag=False)

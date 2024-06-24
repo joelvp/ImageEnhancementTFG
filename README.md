@@ -2,12 +2,12 @@
 
 Este proyecto proporciona herramientas y modelos para la mejora de imágenes. A continuación se detallan los pasos necesarios para clonar el repositorio, configurar el entorno y ejecutar el proyecto.
 
-## Instalación
+## Instalación (Temporal)
 
-Primero, clona el repositorio a tu máquina local utilizando Git:
+Primero, clona el repositorio (branch dev) a tu máquina local utilizando Git:
 
 ```bash
-git clone https://github.com/joelvp/ImageEnhancementTFG.git
+git clone -b dev https://github.com/joelvp/ImageEnhancementTFG.git
 cd ImageEnhancementTFG
 ```
 
