@@ -159,8 +159,7 @@ if __name__ == "__main__":
                 show_label=False,
                 columns=3,
                 rows=1,
-                object_fit="contain",
-                height="auto"
+                object_fit="contain"
             )
 
             input_images.change(update_images, [input_images], input_gallery)
@@ -176,8 +175,7 @@ if __name__ == "__main__":
                 elem_id="sky_image_input",
                 label="Sky Image",
                 visible=False,
-                height=500,
-                width=10000
+                height=300
             )
 
             # Sky image input depends on Sky CheckBox
@@ -192,8 +190,7 @@ if __name__ == "__main__":
                 show_label=False,
                 columns=3,
                 rows=1,
-                object_fit="contain",
-                height="auto"
+                object_fit="contain"
             )
 
             btn_submit.click(apply_transformations_event, [input_images, options, sky_image_input], output_gallery)

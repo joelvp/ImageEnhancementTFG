@@ -5,7 +5,7 @@ from llamaapi import LlamaAPI
 
 import json
 from copy import deepcopy
-from tenacity import retry, stop_after_attempt
+from tenacity import retry, stop_after_attempt, RetryError
 
 
 def load_json(path: str) -> dict:

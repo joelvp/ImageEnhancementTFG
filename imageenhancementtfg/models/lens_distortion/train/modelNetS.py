@@ -11,8 +11,8 @@ H = 256
 x0 = W/2
 y0 = H/2
 
-# Cambiar si se ejecuta con otro batchSize
-batchSize = 32
+# Cambiar si se ejecuta con otro self.batch_size
+# self.batch_size = 32
 
 class BasicEncoderPlainBlock(nn.Module):
     def __init__(self, inChannel, outChannel, stride):
@@ -60,17 +60,18 @@ class GenerateLenFlow(torch.autograd.Function):
     
     @staticmethod
     def forward(self, Input):
-
-        self.save_for_backward(Input)   
+            
+        self.batch_size = Input.size(0)
+        self.save_for_backward(Input)  
         
         Input = Input.cuda()
-        flow = torch.Tensor(batchSize, 2, H, W).cuda()
+        flow = torch.Tensor(self.batch_size, 2, H, W).cuda()
         
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
         
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             coeff = 1 + Input[s] * (-1e-5) * ((i - x0)**2 + (j - y0)**2)
             flow[s,0] = (i-x0)/coeff + x0 - i
             flow[s,1] = (j-y0)/coeff + y0 - j 
@@ -85,14 +86,14 @@ class GenerateLenFlow(torch.autograd.Function):
     
         Input = Input.cuda()
         grad_output = grad_output.cuda()
-        grad_input = Variable(torch.ones(batchSize, 1), requires_grad=False).cuda()
-        grad_current = Variable(torch.ones(batchSize, 2, H, W), requires_grad=False).cuda()
+        grad_input = Variable(torch.ones(self.batch_size, 1), requires_grad=False).cuda()
+        grad_current = Variable(torch.ones(self.batch_size, 2, H, W), requires_grad=False).cuda()
        
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
         
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             r2 = (i - x0)**2 + (j - y0)**2
             temp = (1+r2*Input[s]*(-1e-5))**2
             grad_current[s,0] = (i - x0)*(-1)*r2*(-1e-5) / temp
@@ -100,7 +101,7 @@ class GenerateLenFlow(torch.autograd.Function):
                 
         grad = grad_output * grad_current
         
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             grad_input[s,0] = torch.sum(grad[s,:,:,:])
             
         return grad_input
@@ -110,10 +111,11 @@ class GenerateRotFlow(torch.autograd.Function):
     @staticmethod
     def forward(self, Input):
 
+        self.batch_size = Input.size(0)
         self.save_for_backward(Input)   
         
         Input = Input.cuda()
-        flow = torch.Tensor(batchSize, 2, H, W).cuda()
+        flow = torch.Tensor(self.batch_size, 2, H, W).cuda()
         
         sina = torch.sin(Input)
         cosa = torch.cos(Input)
@@ -122,7 +124,7 @@ class GenerateRotFlow(torch.autograd.Function):
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
         
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             flow[s,0] =  cosa[s]*i + sina[s]*j + (1 - sina[s] - cosa[s])*W/2 - i
             flow[s,1] = -sina[s]*i + cosa[s]*j + (1 + sina[s] - cosa[s])*H/2 - j
                      
@@ -135,8 +137,8 @@ class GenerateRotFlow(torch.autograd.Function):
     
         Input = Input.cuda()
         grad_output = grad_output.cuda()
-        grad_input = Variable(torch.ones(batchSize, 1), requires_grad=False).cuda()
-        grad_current = Variable(torch.ones(batchSize, 2, H, W), requires_grad=False).cuda()
+        grad_input = Variable(torch.ones(self.batch_size, 1), requires_grad=False).cuda()
+        grad_current = Variable(torch.ones(self.batch_size, 2, H, W), requires_grad=False).cuda()
         
         sina = torch.sin(Input)
         cosa = torch.cos(Input)
@@ -144,13 +146,13 @@ class GenerateRotFlow(torch.autograd.Function):
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             grad_current[s,0] = -sina[s]*i + cosa[s]*j + (sina[s] - cosa[s])*W/2
             grad_current[s,1] = -cosa[s]*i - sina[s]*j + (cosa[s] + sina[s])*H/2
                 
         grad = grad_output * grad_current
         
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             grad_input[s,0] = torch.sum(grad[s,:,:,:])
             
         return grad_input
@@ -162,15 +164,16 @@ class GenerateSheFlow(torch.autograd.Function):
     @staticmethod
     def forward(self, Input):
 
+        self.batch_size = Input.size(0)
         self.save_for_backward(Input)   
         
         Input = Input.cuda()
-        flow = torch.Tensor(batchSize, 2, H, W).cuda()
+        flow = torch.Tensor(self.batch_size, 2, H, W).cuda()
         
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             flow[s,0] = (Input[s]*j - Input[s]*W/2.0)*SheFactor
             flow[s,1] = 0
                      
@@ -183,19 +186,19 @@ class GenerateSheFlow(torch.autograd.Function):
     
         Input = Input.cuda()
         grad_output = grad_output.cuda()
-        grad_input = Variable(torch.ones(batchSize, 1), requires_grad=False).cuda()
-        grad_current = Variable(torch.ones(batchSize, 2, H, W), requires_grad=False).cuda()
+        grad_input = Variable(torch.ones(self.batch_size, 1), requires_grad=False).cuda()
+        grad_current = Variable(torch.ones(self.batch_size, 2, H, W), requires_grad=False).cuda()
         
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             grad_current[s,0] = (j - W/2.0)*SheFactor
             grad_current[s,1] = 0   
                 
         grad = grad_output * grad_current
         
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             grad_input[s,0] = torch.sum(grad[s,:,:,:])
             
         return grad_input
@@ -205,10 +208,11 @@ class GenerateProFlow(torch.autograd.Function):
     @staticmethod
     def forward(self, Input):
 
+        self.batch_size = Input.size(0)
         self.save_for_backward(Input)   
         
         Input = Input.cuda()
-        flow = torch.Tensor(batchSize, 2, H, W).cuda()
+        flow = torch.Tensor(self.batch_size, 2, H, W).cuda()
         
         x4 = Input * ProFactor
         
@@ -226,7 +230,7 @@ class GenerateProFlow(torch.autograd.Function):
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             
             im = i/(W - 1.0)
             jm = j/(H - 1.0)
@@ -244,13 +248,13 @@ class GenerateProFlow(torch.autograd.Function):
     
         Input = Input.cuda()
         grad_output = grad_output.cuda()
-        grad_input = Variable(torch.ones(batchSize, 1), requires_grad=False).cuda()
-        grad_current = Variable(torch.ones(batchSize, 2, H, W), requires_grad=False).cuda()
+        grad_input = Variable(torch.ones(self.batch_size, 1), requires_grad=False).cuda()
+        grad_current = Variable(torch.ones(self.batch_size, 2, H, W), requires_grad=False).cuda()
         
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             
             x = Input[s]*ProFactor
             
@@ -264,7 +268,7 @@ class GenerateProFlow(torch.autograd.Function):
         
         grad = grad_output * grad_current
         
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             grad_input[s,0] = torch.sum(grad[s,:,:,:])
             
         return grad_input
@@ -273,17 +277,18 @@ class GenerateWavFlow(torch.autograd.Function):
     @staticmethod
     def forward(self, Input):
 
+        self.batch_size = Input.size(0)
         self.save_for_backward(Input)   
         
         Input = Input.cuda()
-        flow = torch.Tensor(batchSize, 2, H, W).cuda()
+        flow = torch.Tensor(self.batch_size, 2, H, W).cuda()
         
-        temp = torch.ones(batchSize, 1).cuda()
+        temp = torch.ones(self.batch_size, 1).cuda()
         
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             flow[s,0] = Input[s]*torch.sin(math.pi*4*j/(W*2))
             flow[s,1] = 0
                      
@@ -296,22 +301,22 @@ class GenerateWavFlow(torch.autograd.Function):
     
         Input = Input.cuda()
         grad_output = grad_output.cuda()
-        grad_input = Variable(torch.ones(batchSize, 1), requires_grad=False).cuda()
-        grad_current = Variable(torch.ones(batchSize, 2, H, W), requires_grad=False).cuda()
+        grad_input = Variable(torch.ones(self.batch_size, 1), requires_grad=False).cuda()
+        grad_current = Variable(torch.ones(self.batch_size, 2, H, W), requires_grad=False).cuda()
         
-        temp = torch.ones(batchSize, 1).cuda()
+        temp = torch.ones(self.batch_size, 1).cuda()
         
         i, j = np.meshgrid(np.arange(H), np.arange(W), indexing='xy')
         i = torch.from_numpy(i).float().cuda()
         j = torch.from_numpy(j).float().cuda()
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             grad_current[s,0] = torch.sin(math.pi*4*j/(W*2))
             grad_current[s,1] = 0
             
                 
         grad = grad_output * grad_current
         
-        for s in range(batchSize):
+        for s in range(self.batch_size):
             grad_input[s,0] = torch.sum(grad[s,:,:,:])
             
         return grad_input
@@ -365,9 +370,10 @@ class EncoderNet(nn.Module):
         return para
     
 class ModelNet(nn.Module):
-    def __init__(self, types):
+    def __init__(self, types, batch_size):
         super(ModelNet, self).__init__()  
         self.types = types
+        self.batch_size = batch_size 
           
     def forward(self, x):
         

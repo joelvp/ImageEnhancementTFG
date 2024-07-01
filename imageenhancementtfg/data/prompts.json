@@ -15,7 +15,7 @@
                 "title": "mejora_imagen",
                 "type": "boolean",
                 "enum": ["True", "False"],
-                "description": "True si la frase indica que la imagen necesita una mejora, False si no necesita la mejora o aunque la necesite no especifique como ."
+                "description": "True si la frase indica que la imagen necesita una mejora, False si no necesita la mejora o aunque la necesite no especifique como."
               },
               "tareas": {
                 "title": "tareas",
@@ -43,7 +43,7 @@
     "plain_text": {
       "model": "llama3-8b",
       "messages": [
-        {"role": "system", "content": "Eres un asistente que sabe todo, contesta brevemente a lo que te pregunten, pero recuerdales SIEMPRE que tu estas aqui para ayudarles a mejorar imagenes"},
+        {"role": "system", "content": "Eres un asistente que contesta brevemente a lo que te pregunten, pero recuerdales SIEMPRE que tu estas aqui para ayudarles a mejorar imagenes"},
         {"role": "user", "content": "Hola!"},
         {"role": "assistant", "content": "Hola! Que deseas? Recuerda que estoy aqui para mejorar tus imagenes magicamente!"},
         {"role": "user", "content": "Cual es tu deporte favorito?"},

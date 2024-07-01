@@ -62,6 +62,5 @@ def get_loader(distortedImgDir, flowDir, batch_size, distortion_type):
     dataset = DistortionDataset(distortedImgDir, flowDir, transform, distortion_type)
     
     data_loader = data.DataLoader(dataset=dataset,
-                        batch_size=batch_size,
-                        shuffle=True, drop_last=True)
+                        batch_size=batch_size, drop_last=True)
     return data_loader
