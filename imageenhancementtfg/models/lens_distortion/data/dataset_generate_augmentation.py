@@ -342,7 +342,6 @@ if __name__ == '__main__':
 
         ##### Augment Data #####
         if args.data_augmentation:
-            print("Hey")
             augment_data(folders, args.augment_factor, transform_basic)
 
         ##### Rename and shuffle Images #####
@@ -351,7 +350,7 @@ if __name__ == '__main__':
         ##### Prepare indexes #####
         trainnum_total, testnum_total, trainnum_idx, testnum_idx = prepare_indexes_new_generation(folders)
 
-    else: # If processed folder with dataset exists, then check how many final images are there
+    else:  # If processed folder with dataset exists, then check how many final images are there
         trainnum_total, testnum_total, trainnum_idx, testnum_idx = prepare_indexes_started_generation(folders, args)
 
     # Only barrel
