@@ -14,10 +14,10 @@ Asegúrate de cumplir con los siguientes requisitos antes de continuar:
 
 ## Instalación
 
-Primero, clona el repositorio (branch dev) a tu máquina local utilizando Git:
+Primero, clona el repositorio a tu máquina local utilizando Git:
 
 ```bash
-git clone -b dev https://github.com/joelvp/ImageEnhancementTFG.git
+git clone https://github.com/joelvp/ImageEnhancementTFG.git
 cd ImageEnhancementTFG
 ```
 
