@@ -91,7 +91,7 @@ Ubicar los [modelos preentrenados](https://upvedues-my.sharepoint.com/:f:/g/pers
     │       │   │   ├── models/
     │       │   │   │   ├── modelo1.pth
     │       │   │   │   ├── modelo2.pth
-    │       │   │   │   └── ergan/
+    │       │   │   │   └── esrgan/
     │       │   │   │
     │       │   │   └── ...
     │       │   │
@@ -156,7 +156,7 @@ Ubicar los [modelos preentrenados](https://upvedues-my.sharepoint.com/:f:/g/pers
     │       │   │   ├── models/
     │       │   │   │   ├── modelo1.pth
     │       │   │   │   ├── modelo2.pth
-    │       │   │   │   └── ergan/
+    │       │   │   │   └── esrgan/
     │       │   │   │
     │       │   │   ├── data/
     │       │   │   │   ├── dataset_generate_augmentation.py
