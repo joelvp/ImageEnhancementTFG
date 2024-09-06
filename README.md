@@ -163,7 +163,8 @@ Ubicar los [modelos preentrenados](https://upvedues-my.sharepoint.com/:f:/g/pers
     │       │   │   │   └── distorsion_model.py
     │       │   │   │
     │       │   │   ├── train/
-    │       │   │   │   ├── train_S.ipynb
+    │       │   │   │   ├── trainS.ipynb
+    │       │   │   │   ├── trainSweeps.ipynb
     │       │   │   │   └── ...
     │       │   │   │
     │       │   │   ├── lens_distortion.py
@@ -224,6 +225,7 @@ Ubicar los [modelos preentrenados](https://upvedues-my.sharepoint.com/:f:/g/pers
     ├── poetry.lock
     ├── pyproject.toml
     ├── LICENSE
+    ├── Memory.pdf
     └── README.md
 
 ### Explicación archivos
@@ -249,7 +251,8 @@ Este directorio alberga diferentes modelos y sus scripts relacionados.
     - **dataset_generate_augmentation.py**: Script para generar y aumentar datasets para entrenamiento de modelos de corrección de distorsion de lentes.
     - **distorsion_model.py**: Contiene el modelo para simular la distorsión de lentes.
   - **train/**
-    - **train_S.ipynb**: Notebook de Jupyter para entrenar el modelo de distorsión de lentes.
+    - **trainS.ipynb**: Notebook de Jupyter para entrenar el modelo de distorsión de lentes.
+    - **trainSweeps.ipynb**: Notebook de Jupyter para buscar la mejor combinación de hiperparametros con la herramienta Sweeps de Weight&Bias.
   - **lens_distortion.py**: Subclase de la clase abstracta Model, para corregir la distorsion de lente.
 
 - **llama/**: Contiene modelos y scripts relacionados con la implementación de LlamaAPI
@@ -290,6 +293,7 @@ Script donde se utiliza Gradio para crear una interfaz gráfica de usuario. Dond
 - **LICENSES**: Contiene las licencias de los repositorios usados en este proyecto.
 - **figures**: Contiene las images utilizadas en el README.md
 - **LICENSE**: Contiene la información de la licencia para el proyecto.
+- **Memory.pdf**: Memoria de la estructura y creación del proyecto.
 - **README.md**: Proporciona una visión general del proyecto, incluyendo instrucciones de instalación y guías de uso.
 
 
